@@ -356,8 +356,8 @@ class Context(object):
     ############################
     
     def __repr__(self):
-        output = ", ".join(self.attributes) + "\n"
-        output += ", ".join(self.objects) + "\n"
+        output = ", ".join(map(str, self.attributes)) + "\n"
+        output += ", ".join(map(str, self.objects)) + "\n"
         cross = {True : "X", False : "."}
         for i in xrange(len(self.objects)):
             output += ("".join([cross[b] for b in self[i]])) + "\n"
