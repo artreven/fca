@@ -362,6 +362,65 @@ class Context(object):
         for i in xrange(len(self.objects)):
             output += ("".join([cross[b] for b in self[i]])) + "\n"
         return output
+    
+    def clarify_objects(self):
+        """
+        Objects clarification
+        Objects with intent equal to all attributes are not deleted.
+        """
+        if type(self) != Context:
+            raise TypeError("An input object should be a context!")
+        
+        dict_cxt = dict(zip(map(tuple, self), self.objects))
+        table = map(list, dict_cxt.keys())
+        objects = dict_cxt.values()
+        return Context(table, objects, self.attributes)
+        
+    def reduce_objects(self):
+        """
+        Objects reducing.
+        """
+        if type(self) != Context:
+            raise TypeError("An input object should be a context!")
+        
+        def int_repr(arr):
+            """
+            Represent every object's intent as decimal number as in list_to_number
+            """
+            return map(self._bool_list_bitvalue, arr)
+        
+        dict_cxt = dict(zip(int_repr(self), range(len(self))))#clarification
+        keys = dict_cxt.keys()
+        reducible = set()
+        M = (1 << len(self.attributes)) - 1              #set of attributes repr
+        for i in range(len(keys)):                      #checking if i reducible
+            if i in reducible:
+                continue 
+            rest = keys[:i] + keys[i+1:]
+            current = new = M
+            for j in rest:
+                if j in reducible:
+                    continue
+                i_int = keys[i]
+                new = current & j
+                if new & i_int < i_int:
+                    continue
+                elif new == i_int:
+                    reducible.add(i_int)
+                elif new > i_int:
+                    current = new
+        for i in reducible:
+            del dict_cxt[i]
+        objects = [self.objects[i] for i in dict_cxt.values()]
+        table = [self[i] for i in dict_cxt.values()]
+        return Context(table, objects, self.attributes)
+    
+    def _bool_list_bitvalue(self, lst):
+        """
+        input lst - list of Trues and Falses. Translate them to 1s and 0s,
+        then concatenate in binstring, then make it decimal integer
+        """
+        return int(''.join([str(int(i)) for i in lst]), 2)
 
 if __name__ == "__main__":
     import doctest
