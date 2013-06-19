@@ -367,6 +367,10 @@ class Context(object):
         """
         Objects clarification
         Objects with intent equal to all attributes are not deleted.
+        
+        @return: clarified context
+        @note: original context remains unchanged
+        @author: Artem Revenko
         """
         if type(self) != Context:
             raise TypeError("An input object should be a context!")
@@ -379,6 +383,10 @@ class Context(object):
     def reduce_objects(self):
         """
         Objects reducing.
+        
+        @return: reduced context
+        @note: original context remains unchanged
+        @author: Artem Revenko
         """
         if type(self) != Context:
             raise TypeError("An input object should be a context!")
