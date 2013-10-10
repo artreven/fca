@@ -357,10 +357,12 @@ class Context(object):
     
     def __repr__(self):
         output = ", ".join(map(str, self.attributes)) + "\n"
-        output += ", ".join(map(str, self.objects)) + "\n"
+        objects_list = map(str, self.objects)
+        #output += ", ".join(map(str, self.objects)) + "\n"
         cross = {True : "X", False : "."}
         for i in xrange(len(self.objects)):
-            output += ("".join([cross[b] for b in self[i]])) + "\n"
+            output += (objects_list[i] + "\t" + 
+                       "".join([cross[b] for b in self[i]]) + "\n")
         return output
     
     def clarify_objects(self):
