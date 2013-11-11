@@ -425,6 +425,37 @@ class Context(object):
         table = [self[i] for i in dict_cxt.values()]
         return Context(table, objects, self.attributes)
     
+    def complementary(self):
+        """
+        Make and return complementary context.
+        
+        @return: complementary context
+        @note: original context remains unchanged
+        @author: Artem Revenko
+        """
+        complementary_attributes = ['not ' + self._attributes[i]
+                               for i in xrange(len(self._attributes))]
+        complementary_table = []
+        for i in range(len(self._objects)):
+            complementary_table.append([not self._table[i][j]
+                                   for j in xrange(len(self._attributes))])
+        return Context(complementary_table, self.objects, complementary_attributes)
+    
+    def compound(self):
+        """
+        Make and return compound (= original + complementary) context.
+        
+        @return: compound context
+        @note: original context remains unchanged
+        @author: Artem Revenko
+        """
+        complementary_cxt = self.complementary() 
+        compound_table = [self._table[i] + complementary_cxt._table[i]
+                          for i in xrange(len(self.objects))]
+        return Context(compound_table,
+                       self.objects,
+                       self.attributes + complementary_cxt.attributes)
+    
     def _bool_list_bitvalue(self, lst):
         """
         input lst - list of Trues and Falses. Translate them to 1s and 0s,
