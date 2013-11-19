@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Derivation and closure operators"""
 
+from collections import defaultdict
 import copy
 
 def oprime(objects, context):
@@ -39,7 +40,7 @@ def aclosure(attributes, context):
     
 def simple_closure(s, implications):
     """
-    Input:  A set of implications and an attribute set s
+    Input:  A collection of implications and an attribute set s
     Output: The closure of s with respect to implications
     
     Examples
@@ -83,13 +84,14 @@ def simple_closure(s, implications):
                 unused_imps.remove(imp)
     return new_closure
     
-
 def lin_closure(s, implications):
     """
-    Input:  A set of implications and an attribute set s
+    Input:  A collection of implications and an attribute set s
     Output: The closure of s with respect to implications
     NB: This implementation is not linear-time.
         Use lists instead of dicts to get a liner-time implementation.
+        
+    Note: refactored by Artem Revenko to increase performance.
     
     Examples
     ========
@@ -120,27 +122,35 @@ def lin_closure(s, implications):
     True
     
     """
-    new_closure = s.copy()
-    count, imps = {}, {}
-    for imp in implications:
-        count[imp] = len(imp.premise)
+    def decrease_count(i):
+        imp = current_imps[i]
         if count[imp] == 0:
-            new_closure |= imp.conclusion
-        for a in imp.premise:
-            imps.setdefault(a, [])
-            imps[a].append(imp)
+            return set()
+        count[imp] -= 1
+        if count[imp] == 0:
+            return imp._conclusion
+        return set()
+    new_closure = s.copy()
+    new_closure = reduce(set.union,
+                         [imp._conclusion for imp in implications if not imp.premise],
+                         new_closure)
+    count_ls = [(imp, len(imp.premise)) for imp in implications]
+    count = dict(count_ls)
+    imps_ls = [(attr, imp) for imp in implications for attr in imp.premise]
+    imps = defaultdict(list)
+    for n,v in imps_ls:
+        imps[n].append(v)
     update = list(new_closure)
     
     while update:
-        m = update[-1]
-        del update[-1]
-        imps.setdefault(m, [])
-        for imp in imps[m]:
-            count[imp] -= 1
-            if count[imp] == 0:
-                add = imp.conclusion - new_closure
-                new_closure |= add
-                update.extend(add)
+        m = update.pop()
+        current_imps = imps[m]
+        add = reduce(set.union,
+                     map(decrease_count, range(len(current_imps))),
+                     set()) - new_closure
+        new_closure |= add
+        update.extend(add)
+        
     return new_closure
 
 
@@ -175,5 +185,32 @@ def closure(current, base_set, implications, prefLen):
                 
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    #import doctest
+    #doctest.testmod()
+    def foo1():
+        from fca.implication import Implication
+        cd2a = Implication(set(('c', 'd')), set(('a')))
+        ad2c = Implication(set(('a', 'd')), set(('c')))
+        ab2cd = Implication(set(('a', 'b')), set(('c', 'd')))
+        imps = [cd2a, ad2c, ab2cd]
+        assert lin_closure(set('a'), imps) == set(['a'])
+        assert lin_closure(set(), imps) == set([])
+        assert lin_closure(set(['b', 'c', 'd']), imps) == set(['a', 'b', 'c', 'd'])
+        
+        a2bc = Implication(set(('a')), set(('b', 'c')))
+        ce2abd = Implication(set(('c', 'e')), set(('a', 'b', 'd')))
+        de2abc = Implication(set(('d', 'e')), set(('a', 'b', 'c')))
+        cd2abe = Implication(set(('c', 'd')), set(('a', 'b', 'e')))
+        imps = [a2bc, ce2abd, de2abc, cd2abe]
+        assert lin_closure(set(['b', 'a']), imps) == set(['a', 'b', 'c'])
+        assert lin_closure(set(['a', 'e']), imps) == set(['a', 'b', 'c', 'd', 'e'])
+        imps = [ce2abd, a2bc, de2abc, cd2abe]
+        assert lin_closure(set(['a', 'e']), imps) == set(['a', 'b', 'c', 'd', 'e'])
+        imps = [ce2abd, a2bc, de2abc, cd2abe, cd2abe, cd2abe, cd2abe, cd2abe]
+        for i in range(1000):
+            lin_closure(set(['a', 'e']), imps)
+            lin_closure(set(['b', 'a']), imps)
+    
+    from fca.implication import Implication
+    import cProfile
+    cProfile.run('foo1()')
