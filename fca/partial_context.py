@@ -35,8 +35,8 @@ class PartialContext(object):
             self.q_context = Context(q_table, objects[:], self.attributes[:])
 
     def __deepcopy__(self, memo):
-        return PartialContext(deepcopy(self.x_context._table, memo),
-                              deepcopy(self.q_context._table, memo),
+        return PartialContext(deepcopy(self.x_context.table, memo),
+                              deepcopy(self.q_context.table, memo),
                               self.objects[:],
                               self.attributes[:])
 
@@ -50,8 +50,8 @@ class PartialContext(object):
             x_line = []
             q_line = []
             for i in xrange(len(self.objects)):
-                x_line.append(self.x_context._table[i][j])
-                q_line.append(self.q_context._table[i][j])
+                x_line.append(self.x_context.table[i][j])
+                q_line.append(self.q_context.table[i][j])
             new_x_table.append(x_line)
             new_q_table.append(q_line)
         return PartialContext(new_x_table, new_q_table, new_objects, new_attributes)

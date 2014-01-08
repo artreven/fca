@@ -59,17 +59,17 @@ class ManyValuedContext(Context):
                     " columns (=%i) must agree" % (len(attributes),
                         len(table[0])))
 
-        self._table = table
-        self._objects = objects
-        self._attributes = attributes
+        self.table = table
+        self.objects = objects
+        self.attributes = attributes
 
     def get_objects(self):
-        return self._objects
+        return self.objects
 
     objects = property(get_objects)
 
     def get_attributes(self):
-        return self._attributes
+        return self.attributes
         
     attributes = property(get_attributes)
 
@@ -108,10 +108,10 @@ class ManyValuedContext(Context):
     ############################
 
     def __len__(self):
-        return len(self._table)
+        return len(self.table)
 
     def __getitem__(self, key):
-        return self._table[key]
+        return self.table[key]
 
     ############################
 

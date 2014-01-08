@@ -22,6 +22,21 @@ def compute_dg_basis(cxt,
                                         close=close,
                                         imp_basis=imp_basis,
                                         cond=cond)
+    
+def compute_dg_basis_simple(cxt,
+                            close=closure_operators.simple_closure,
+                            imp_basis=[],
+                            cond=lambda x: True):
+    """
+    Compute Duquenne-Guigues basis for a given *cxt* using 
+    optimized Ganter algorithm and simple closure.
+    """
+    aclose = lambda attributes: closure_operators.aclosure(attributes, cxt)
+    return generalized_compute_dg_basis(cxt.attributes, 
+                                        aclose,
+                                        close=close,
+                                        imp_basis=imp_basis,
+                                        cond=cond)
 
 
 def compute_partial_dg_basis(pcxt,
@@ -30,7 +45,7 @@ def compute_partial_dg_basis(pcxt,
                              cond=lambda x: True):
     """
     Compute Duquenne-Guigues basis for a given partial context *pcxt* using
-    optimized Ganter algorithm
+    optimized Ganter algorithm.
     """
     return generalized_compute_dg_basis(pcxt.attributes,
                                         pcxt.xq_aclosure,

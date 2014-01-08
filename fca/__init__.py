@@ -4,13 +4,14 @@
 from fca.concept import Concept
 from fca.concept_system import ConceptSystem
 from fca.concept_lattice import ConceptLattice
-from fca.context import Context
+from fca.context import Context, make_random_context
 from fca.mvcontext import ManyValuedContext
 from fca.scale import Scale
 from fca.implication import Implication
 
 from fca.algorithms import (norris, compute_covering_relation,
-                            scale_mvcontext, compute_dg_basis)
+                            scale_mvcontext, compute_dg_basis, aibasis,
+                            compute_dg_basis_simple)
 from fca.readwrite import (read_txt, read_cxt, write_cxt, write_dot,
                            read_mv_txt, read_xml, write_xml, write_mv_txt,
                            uread_cxt, uwrite_cxt, read_txt_with_names)

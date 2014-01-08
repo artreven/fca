@@ -33,8 +33,8 @@ class Implication(object):
         """
         Create implication from two sets of attributes
         """
-        self._premise = premise
-        self._conclusion = conclusion
+        self._premise = set(premise)
+        self._conclusion = set(conclusion)
         
     def __deepcopy__(self, memo):
         return Implication(self._premise.copy(), self._conclusion.copy())
@@ -72,8 +72,8 @@ class Implication(object):
         return self.__repr__()
 
     def __cmp__(self, other):
-        if ((self._premise == other.premise) and 
-            (self._conclusion == other.conclusion)):
+        if ((self._premise == other._premise) and 
+            (self._conclusion == other._conclusion)):
             return 0
         else:
             return -1
@@ -82,9 +82,9 @@ class Implication(object):
         """Checks whether *some_set* respects an implication or not"""
         # if some_set contains every element from premise and not every
         # element from conclusion then it doesn't respect an implication
-        # TODO: refactor
+        # TODO: refactor for partial case
         if type(some_set) == set:
-            return self.conclusion <= some_set or not self.premise <= some_set
+            return not self._premise <= some_set or self._conclusion <= some_set 
         else:
             # Assume a partial example
             return (self.conclusion <= some_set[1] or

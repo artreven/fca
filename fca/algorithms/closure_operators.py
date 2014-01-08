@@ -8,25 +8,21 @@ def oprime(objects, context):
     """
     Compute the set of all attributes shared by objects in context.
     NB: objects must be of type set
-    
     """
     attributes = set(context.attributes[:])
     for o in objects:
         attributes &= context.get_object_intent(o)
     return attributes
-    
 
 def aprime(attributes, context):
     """
     Compute the set of all objects sharing attributes in context.
     NB: attributes must be of type set
-    
     """
     objects = set(context.objects[:])
     for a in attributes:
         objects &= context.get_attribute_extent(a)
     return objects
-    
     
 def oclosure(objects, context):
     """Return the closure of objects in context as a sorted list"""
@@ -42,6 +38,8 @@ def simple_closure(s, implications):
     """
     Input:  A collection of implications and an attribute set s
     Output: The closure of s with respect to implications
+    
+    @note: refactored by Artem Revenko to increase performance.
     
     Examples
     ========
@@ -76,12 +74,14 @@ def simple_closure(s, implications):
     new_closure = s.copy()
     changed = True
     while changed:
+        to_remove = set()
         changed = False
         for imp in unused_imps:
-            if imp.premise <= new_closure:
-                new_closure |= imp.conclusion
+            if imp._premise <= new_closure:
+                new_closure |= imp._conclusion
                 changed = True
-                unused_imps.remove(imp)
+                to_remove.add(imp)
+        unused_imps = [imp for imp in unused_imps if not imp in to_remove]
     return new_closure
     
 def lin_closure(s, implications):
@@ -91,7 +91,7 @@ def lin_closure(s, implications):
     NB: This implementation is not linear-time.
         Use lists instead of dicts to get a liner-time implementation.
         
-    Note: refactored by Artem Revenko to increase performance.
+    @note: refactored by Artem Revenko to increase performance.
     
     Examples
     ========
@@ -130,6 +130,9 @@ def lin_closure(s, implications):
         if count[imp] == 0:
             return imp._conclusion
         return set()
+    
+    if not implications:
+        return s
     new_closure = s.copy()
     new_closure = reduce(set.union,
                          [imp._conclusion for imp in implications if not imp.premise],
@@ -185,32 +188,5 @@ def closure(current, base_set, implications, prefLen):
                 
 
 if __name__ == "__main__":
-    #import doctest
-    #doctest.testmod()
-    def foo1():
-        from fca.implication import Implication
-        cd2a = Implication(set(('c', 'd')), set(('a')))
-        ad2c = Implication(set(('a', 'd')), set(('c')))
-        ab2cd = Implication(set(('a', 'b')), set(('c', 'd')))
-        imps = [cd2a, ad2c, ab2cd]
-        assert lin_closure(set('a'), imps) == set(['a'])
-        assert lin_closure(set(), imps) == set([])
-        assert lin_closure(set(['b', 'c', 'd']), imps) == set(['a', 'b', 'c', 'd'])
-        
-        a2bc = Implication(set(('a')), set(('b', 'c')))
-        ce2abd = Implication(set(('c', 'e')), set(('a', 'b', 'd')))
-        de2abc = Implication(set(('d', 'e')), set(('a', 'b', 'c')))
-        cd2abe = Implication(set(('c', 'd')), set(('a', 'b', 'e')))
-        imps = [a2bc, ce2abd, de2abc, cd2abe]
-        assert lin_closure(set(['b', 'a']), imps) == set(['a', 'b', 'c'])
-        assert lin_closure(set(['a', 'e']), imps) == set(['a', 'b', 'c', 'd', 'e'])
-        imps = [ce2abd, a2bc, de2abc, cd2abe]
-        assert lin_closure(set(['a', 'e']), imps) == set(['a', 'b', 'c', 'd', 'e'])
-        imps = [ce2abd, a2bc, de2abc, cd2abe, cd2abe, cd2abe, cd2abe, cd2abe]
-        for i in range(1000):
-            lin_closure(set(['a', 'e']), imps)
-            lin_closure(set(['b', 'a']), imps)
-    
-    from fca.implication import Implication
-    import cProfile
-    cProfile.run('foo1()')
+    import doctest
+    doctest.testmod()

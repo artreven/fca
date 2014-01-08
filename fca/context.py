@@ -3,9 +3,28 @@
 Holds class for context
 """
 import copy
+import random
 
 import fca.algorithms
 
+
+def memo(f):
+    """
+    Decorator that caches the return value for each call to f(args).
+    Then when called again with same args, we can just look it up.
+    """
+    def _f(*args):
+        try:
+            return _f.cache[args]
+        except KeyError:
+            _f.cache[args] = result = f(*args)
+            return result
+        except TypeError:
+            # some element of args can't be a dict key
+            return f(*args)
+    _f.__name__ = f.__name__
+    _f.cache = {}
+    return _f
 
 class Context(object):
     """
@@ -13,6 +32,8 @@ class Context(object):
     and of a binary relation between them.
 
     As a data type we use a bit matrix.
+    
+    @note: refactored by Artem Revenko to increase performance.
 
     Examples
     ========
@@ -98,24 +119,14 @@ class Context(object):
                     " columns (=%i) must agree" % (len(attributes),
                         len(cross_table[0])))
 
-        self._table = cross_table
-        self._objects = objects
-        self._attributes = attributes
+        self.table = cross_table
+        self.objects = objects
+        self.attributes = attributes
         
     def __deepcopy__(self, memo):
-        return Context(copy.deepcopy(self._table, memo),
-                       self._objects[:],
-                       self._attributes[:])
-
-    def get_objects(self):
-        return self._objects
-
-    objects = property(get_objects)
-
-    def get_attributes(self):
-        return self._attributes
-
-    attributes = property(get_attributes)
+        return Context(copy.deepcopy(self.table, memo),
+                       self.objects[:],
+                       self.attributes[:])
     
     def get_attribute_implications(self, 
                                    basis=fca.algorithms.compute_dg_basis,
@@ -143,35 +154,57 @@ class Context(object):
     object_implications = property(get_object_implications)
         
     def examples(self):
-        """Generator. Generate set of corresponding attributes
-        for each row (object) of context
         """
-        for obj in self._table:
-            attrs_indexes = filter(lambda i: obj[i], range(len(obj)))
-            yield set([self.attributes[i] for i in attrs_indexes])
+        Generator. Generate set of corresponding attributes
+        for each row (object) of context.
+        """
+        for obj_ind in xrange(len(self.objects)):
+            yield self.get_object_intent_by_index(obj_ind)
             
     def intents(self):
         return self.examples()
-
-    def get_object_intent_by_index(self, i):
+    
+    def get_object_intent_by_index_old(self, i):
         """Return a set of corresponding attributes for row with index i"""
         # TODO: !!! Very inefficient. Avoid using
-        attrs_indexes = filter(lambda j: self._table[i][j],
-                range(len(self._table[i])))
+        attrs_indexes = filter(lambda j: self.table[i][j],
+                               range(len(self.table[i])))
         return set([self.attributes[i] for i in attrs_indexes])
     
+    @memo
+    def get_object_intent_by_index(self, i):
+        """
+        Return a set of corresponding attributes for row with index i.
+        @note: refactored by Artem Revenko to increase performance.  
+        """
+        atts = [self.attributes[j]
+                for j in xrange(len(self.attributes))
+                if self.table[i][j]]
+        return set(atts)
+    
     def get_object_intent(self, o):
-        index = self._objects.index(o)
+        index = self.objects.index(o)
         return self.get_object_intent_by_index(index)
     
-    def get_attribute_extent_by_index(self, j):
+    def get_attribute_extent_by_index_old(self, j):
         """Return a set of corresponding objects for column with index i"""
-        objs_indexes = filter(lambda i: self._table[i][j],
-                range(len(self._table)))
+        objs_indexes = filter(lambda i: self.table[i][j],
+                              range(len(self.table)))
         return set([self.objects[i] for i in objs_indexes])
     
+    @memo
+    def get_attribute_extent_by_index(self, j):
+        """
+        Return a set of corresponding objects for column with index i.
+        @note: refactored by Artem Revenko to increase performance. 
+        """
+        objects = [self.objects[i]
+                   for i in xrange(len(self.objects))
+                   if self.table[i][j]]
+        return set(objects)
+    
     def get_attribute_extent(self, a):
-        index = self._attributes.index(a)
+        index = self.attributes.index(a)
         return self.get_attribute_extent_by_index(index)
         
     def get_value(self, o, a):
@@ -179,11 +212,16 @@ class Context(object):
         ia = self.attributes.index(a)
         return self[io][ia]
     
+    def get_aibasis(self):
+        """Compute the canonical basis using ai algorithm"""
+        return fca.algorithms.aibasis.compute_canonical_basis(self)
+    
     def add_attribute(self, col, attr_name):
         """Add new attribute to context with given name"""
-        for i in range(len(self._objects)):
-            self._table[i].append(col[i])
-        self._attributes.append(attr_name)
+        for i in range(len(self.objects)):
+            self.table[i].append(col[i])
+        self.attributes.append(attr_name)
+        self.get_object_intent_by_index.__func__.cache = {}
 
     def add_column(self, col, attr_name):
         """Deprecated. Use add_attribute."""
@@ -192,59 +230,74 @@ class Context(object):
 
     def add_object(self, row, obj_name):
         """Add new object to context with given name"""
-        self._table.append(row)
-        self._objects.append(obj_name)
+        self.table.append(row)
+        self.objects.append(obj_name)
+        self.get_attribute_extent_by_index.__func__.cache = {}
         
     def add_object_with_intent(self, intent, obj_name):
         self._attr_imp_basis = None
-        self._objects.append(obj_name)
-        row = [(attr in intent) for attr in self._attributes]
-        self._table.append(row)
+        self.objects.append(obj_name)
+        row = [(attr in intent) for attr in self.attributes]
+        self.table.append(row)
+        self.get_attribute_extent_by_index.__func__.cache = {}
         
     def add_attribute_with_extent(self, extent, attr_name):
-        col = [(obj in extent) for obj in self._objects]
+        col = [(obj in extent) for obj in self.objects]
         self.add_attribute(col, attr_name)
+        self.get_object_intent_by_index.__func__.cache = {}
         
     def set_attribute_extent(self, extent, name):
-        attr_index = self._attributes.index(name)
-        for i in range(len(self._objects)):
-            self._table[i][attr_index] = (self._objects[i] in extent)
+        attr_index = self.attributes.index(name)
+        for i in range(len(self.objects)):
+            self.table[i][attr_index] = (self.objects[i] in extent)
+        self.get_attribute_extent_by_index.__func__.cache = {}
+        self.get_object_intent_by_index.__func__.cache = {}
             
     def set_object_intent(self, intent, name):
-        obj_index = self._objects.index(name)
-        for i in range(len(self._attributes)):
-            self._table[obj_index][i] = (self._attributes[i] in intent)
+        obj_index = self.objects.index(name)
+        for i in range(len(self.attributes)):
+            self.table[obj_index][i] = (self.attributes[i] in intent)
+        self.get_attribute_extent_by_index.__func__.cache = {}
+        self.get_object_intent_by_index.__func__.cache = {}
         
     def delete_object(self, obj_index):
-        del self._table[obj_index]
-        del self._objects[obj_index]
+        del self.table[obj_index]
+        del self.objects[obj_index]
+        self.get_attribute_extent_by_index.__func__.cache = {}
+        self.get_object_intent_by_index.__func__.cache = {}
         
     def delete_object_by_name(self, obj_name):
         self.delete_object(self.objects.index(obj_name))
     
     def delete_attribute(self, attr_index):
-        for i in range(len(self._objects)):
-            del self._table[i][attr_index]
-        del self._attributes[attr_index]
+        for i in range(len(self.objects)):
+            del self.table[i][attr_index]
+        del self.attributes[attr_index]
+        self.get_attribute_extent_by_index.__func__.cache = {}
+        self.get_object_intent_by_index.__func__.cache = {}
         
     def delete_attribute_by_name(self, attr_name):
         self.delete_attribute(self.attributes.index(attr_name))
         
     def rename_object(self, old_name, name):
-        self._objects[self._objects.index(old_name)] = name
+        self.objects[self.objects.index(old_name)] = name
+        self.get_attribute_extent_by_index.__func__.cache = {}
+        self.get_object_intent_by_index.__func__.cache = {}
         
     def rename_attribute(self, old_name, name):
-        self._attributes[self._attributes.index(old_name)] = name
+        self.attributes[self.attributes.index(old_name)] = name
+        self.get_attribute_extent_by_index.__func__.cache = {}
+        self.get_object_intent_by_index.__func__.cache = {}
         
     def transpose(self):
         """Return new context with transposed cross-table"""
-        new_objects = self._attributes[:]
-        new_attributes = self._objects[:]
+        new_objects = self.attributes[:]
+        new_attributes = self.objects[:]
         new_cross_table = []
-        for j in xrange(len(self._attributes)):
+        for j in xrange(len(self.attributes)):
             line = []
-            for i in xrange(len(self._objects)):
-                line.append(self._table[i][j])
+            for i in xrange(len(self.objects)):
+                line.append(self.table[i][j])
             new_cross_table.append(line)
         return Context(new_cross_table, new_objects, new_attributes)
         
@@ -287,7 +340,7 @@ class Context(object):
         """
         indices = [i for i in range(len(self)) if condition(i)]
         return ([self.objects[i] for i in indices],
-                [self._table[i] for i in indices])
+                [self.table[i] for i in indices])
                 
     def _extract_subtable_by_attribute_values(self, values, 
                                                     mode="and"):
@@ -304,7 +357,7 @@ class Context(object):
         elif mode == "or":
             indices = [i for i in range(len(self)) if self._has_at_least_one_value(i, values)]
         return ([self.objects[i] for i in indices],
-                [self._table[i] for i in indices])
+                [self.table[i] for i in indices])
                 
     def _has_values(self, i, values):
         """Test if ith object has attribute values as indicated.
@@ -348,17 +401,16 @@ class Context(object):
     ############################
 
     def __len__(self):
-        return len(self._table)
+        return len(self.table)
 
     def __getitem__(self, key):
-        return self._table[key]
+        return self.table[key]
 
     ############################
     
     def __repr__(self):
         output = ", ".join(map(str, self.attributes)) + "\n"
         objects_list = map(str, self.objects)
-        #output += ", ".join(map(str, self.objects)) + "\n"
         cross = {True : "X", False : "."}
         for i in xrange(len(self.objects)):
             output += (objects_list[i] + "\t" + 
@@ -433,12 +485,12 @@ class Context(object):
         @note: original context remains unchanged
         @author: Artem Revenko
         """
-        complementary_attributes = ['not ' + self._attributes[i]
-                               for i in xrange(len(self._attributes))]
+        complementary_attributes = ['not ' + self.attributes[i]
+                               for i in xrange(len(self.attributes))]
         complementary_table = []
-        for i in range(len(self._objects)):
-            complementary_table.append([not self._table[i][j]
-                                   for j in xrange(len(self._attributes))])
+        for i in range(len(self.objects)):
+            complementary_table.append([not self.table[i][j]
+                                   for j in xrange(len(self.attributes))])
         return Context(complementary_table, self.objects, complementary_attributes)
     
     def compound(self):
@@ -450,7 +502,7 @@ class Context(object):
         @author: Artem Revenko
         """
         complementary_cxt = self.complementary() 
-        compound_table = [self._table[i] + complementary_cxt._table[i]
+        compound_table = [self.table[i] + complementary_cxt.table[i]
                           for i in xrange(len(self.objects))]
         return Context(compound_table,
                        self.objects,
@@ -462,7 +514,62 @@ class Context(object):
         then concatenate in binstring, then make it decimal integer
         """
         return int(''.join([str(int(i)) for i in lst]), 2)
+    
+def make_random_context(obj_num, att_num, d):
+    """
+    Make random context, useful for testing.
+    
+    @param d: density of the context, i.e. probability of finding a cross in any
+    field.
+    @param obj_num: number of object
+    @param att_num: number of attributes  
+    """
+    obj_ls = map(lambda x: 'g' + str(x), range(obj_num))
+    att_ls = map(lambda x: 'm' + str(x), range(att_num))
+    table = [[int(d > random.random())
+              for _ in xrange(att_num)]
+             for _ in xrange(obj_num)]
+    return Context(table, obj_ls, att_ls)
 
 if __name__ == "__main__":
+    """
     import doctest
     doctest.testmod()
+    
+    """
+    import random
+    import cProfile
+    
+    num_atts = 40
+    num_objs = 500
+    cxt = make_random_context(num_objs, num_atts, 0.3)
+    def check_same():
+        obj_ind = random.choice(range(num_objs))
+        att_ind = random.choice(range(num_atts))
+        assert (cxt.get_object_intent_by_index_old(obj_ind) ==
+                cxt.get_object_intent_by_index(obj_ind))
+    for _ in range(10):
+        check_same()
+        
+    def get_obj_int_index0():
+        obj_ind = random.choice(range(num_objs))
+        cxt.get_object_intent_by_index_old(obj_ind)
+    def get_obj_int_index():
+        obj_ind = random.choice(range(num_objs))
+        cxt.get_object_intent_by_index(obj_ind)
+    print 'object original'
+    cProfile.run('''for _ in range(1000): get_obj_int_index0()''')
+    print 'objects new'
+    cProfile.run('''for _ in range(1000): get_obj_int_index()''')
+    
+    def get_att_index_old():
+        att_ind = random.choice(range(num_atts))
+        cxt.get_attribute_extent_by_index_old(att_ind)
+    def get_att_index():
+        att_ind = random.choice(range(num_atts))
+        cxt.get_attribute_extent_by_index(att_ind)
+    print 'att original'
+    cProfile.run('''for _ in range(1000): get_att_index_old()''')
+    print 'att new'
+    cProfile.run('''for _ in range(1000): get_att_index()''')
+    

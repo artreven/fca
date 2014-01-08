@@ -23,9 +23,9 @@ class Scale(Context):
 
     def __init__(self, context):
         """Constructor"""
-        super(Scale, self).__init__(context._table,
-                                    context._objects,
-                                    context._attributes)
+        super(Scale, self).__init__(context.table,
+                                    context.objects,
+                                    context.attributes)
 
 
 class NominalScale(Scale):
