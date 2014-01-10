@@ -42,6 +42,11 @@ class ConceptLattice(object):
     
     context = property(get_context)
     
+    def get_concepts(self):
+        return map(lambda c: (c.extent, c.intent), self._concepts)
+    
+    concepts = property(get_concepts)
+    
     def get_top_concept(self):
         # TODO: change
         return self._top_concept
