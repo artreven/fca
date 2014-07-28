@@ -6,8 +6,8 @@ from setuptools import setup
 
 setup(name             = "fca",
       version          = "0.0.2",
-      author           = ["Nikita Romashkin", "Artem Revenko"],
-      author_email     = ["romashkin.nikita@gmail.com", "artreven@gmail.com"],
+      author           = ["Sergei Obiedkov", "Nikita Romashkin", "Artem Revenko"],
+      author_email     = ["not given", "romashkin.nikita@gmail.com", "artreven@gmail.com"],
       description      = "Python package for formal concept analysis",
       keywords         = ["Formal Concept Analysis", "Data Analysis",
                           "Computer Science", "Algebraic Lattices",
