@@ -36,12 +36,12 @@ def scale_mvcontext(mvcontext, scales):
     ['g1', 'g2', 'g3']
     
     """
-    derived_context = fca.Context([[] for i in xrange(len(mvcontext.objects))],
+    derived_context = fca.Context([[] for _ in xrange(len(mvcontext.objects))],
                                    mvcontext.objects, [])
     for attr_index in range(len(mvcontext.attributes)):
         scale = scales[attr_index]
         for col in xrange(len(scale.attributes)):
-            derived_attr = [False for i in xrange(len(mvcontext.objects))]
+            derived_attr = [False for _ in xrange(len(mvcontext.objects))]
             for row in xrange(len(scale.objects)):
                 for obj in xrange(len(mvcontext.objects)):
                     if derived_attr[obj]:
@@ -55,7 +55,7 @@ def scale_mvcontext(mvcontext, scales):
                             derived_attr[obj] = scale[row][col]
             new_attribute_name = ":".join([mvcontext.attributes[attr_index],
                                                   scale.attributes[col]])
-            derived_context.add_column(derived_attr, new_attribute_name)                                    
+            derived_context.add_attribute(derived_attr, new_attribute_name)                                    
     return derived_context
         
 

@@ -71,6 +71,7 @@ def algorithm2(cxt):
     while U:
         D = set()
         V = 0
+        to_remove = set()
         while True:
             ls_measures = [(len(_oplus(D, j, cxt, U)), j)
                            for j in set(cxt.attributes) - D]
@@ -89,6 +90,9 @@ def algorithm2(cxt):
                 break
         F.append(fca.Concept(C, D))
         U -= to_remove
+        if len(to_remove) == 0:
+            print 'Algorithm stuck, something went wrong, pairs left ', len(U)
+            assert False
     return F
 
 if __name__ == '__main__':

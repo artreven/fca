@@ -34,17 +34,24 @@ class NominalScale(Scale):
         input many-valued context.
         
         """
+        def foo(value):
+            try:
+                return float(value)
+            except ValueError:
+                return "'" + str(value) + "'"
         if type(attribute) == str:
             attribute = mvcontext.attributes.index(attribute)
-        values = list(set([mvcontext[i][attribute]
+        values = list(set([foo(mvcontext[i][attribute])
                            for i in range(len(mvcontext))]))
-        objects = ["value == %s" % v for v in values]
+        objects = ["value == {}".format(v) for v in values]
         table = []
         for i in range(len(objects)):
             row = [False] * len(values)
             row[i] = True
             table.append(row)
-        super(NominalScale, self).__init__(Context(table, objects, values))
+        super(NominalScale, self).__init__(Context(table,
+                                                   objects,
+                                                   map(str, values)))
 
 
 class OrdinalScale(Scale):

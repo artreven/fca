@@ -89,7 +89,31 @@ class Implication(object):
             # Assume a partial example
             return (self.conclusion <= some_set[1] or
                     not self.premise <= some_set[0])
+            
+    @classmethod
+    def str2imp(cls, string):
+        def str2set(str_):
+            return set(map(str.strip, str_.split(',')))
+        str_premise, str_conclusion = string.split('=>')
+        premise = str2set(str_premise)
+        conclusion = str2set(str_conclusion)
+        return cls(premise, conclusion)
         
+class UnitImplication(Implication):
+    def __init__(self, premise = set(), conclusion = None):
+        """
+        Create implication from set *premise* and element *conclusion*
+        """
+        if isinstance(conclusion, set):
+            conclusion = frozenset(conclusion)
+        set_conclusion = set((conclusion,))
+        super(UnitImplication, self).__init__(premise, set_conclusion)
+
+    def get_reduced_conclusion(self):
+        return super(UnitImplication, self).conclusion.pop()
+    
+    conclusion = property(get_reduced_conclusion)
+    
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

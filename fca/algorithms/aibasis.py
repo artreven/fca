@@ -1,7 +1,12 @@
+'''
+Attribute Incremental algorithm for finding the canonical basis.
+
+@author: Sergei Obiedkov
+'''
+
 import fca
 
 from fca.algorithms import closure_operators
-
 
 def kclosure(s, k, cxt):
     '''

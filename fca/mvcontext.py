@@ -59,19 +59,24 @@ class ManyValuedContext(Context):
                     " columns (=%i) must agree" % (len(attributes),
                         len(table[0])))
 
-        self.table = table
-        self.objects = objects
-        self.attributes = attributes
+        self._table = table
+        self._objects = objects
+        self._attributes = attributes
 
     def get_objects(self):
-        return self.objects
+        return self._objects
 
     objects = property(get_objects)
 
     def get_attributes(self):
-        return self.attributes
+        return self._attributes
         
     attributes = property(get_attributes)
+    
+    def get_table(self):
+        return self._table
+        
+    table = property(get_table)
 
     def extract_subcontext(self, attribute_names):
         """Create a subcontext with only indicated attributes"""

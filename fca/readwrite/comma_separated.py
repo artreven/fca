@@ -58,10 +58,15 @@ def read_mv_csv(path):
 
     return fca.ManyValuedContext(table, objects, attributes)
 
+def read_csv(path):
+    """
+    Read (binary) formal context.
+    
+    @note: uses *read_mv_csv* add then treats many valued context as binary
+    """
+    mvcxt = read_mv_csv(path)
+    return fca.Context(mvcxt.table, mvcxt.objects, mvcxt.attributes)
 
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-    
-    
-

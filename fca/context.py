@@ -4,6 +4,7 @@ Holds class for context
 """
 import copy
 import random
+import operator
 
 import fca.algorithms
 
@@ -35,6 +36,15 @@ class MultiplicationException(ContextException):
         message = "Attributes of the first context:\n".format(self.atts_num_l)
         message += "\nand number of objects of the second context:\n".format(self.objs_num_r)
         message += "\nshould be the same."
+        return message
+    
+class NotUniqueElementException(ContextException):
+    def __init__(self, element):
+        self.element = element
+        
+    def __str__(self):
+        message = 'Element {} '.format(self.element)
+        message += 'is already in context (object or attribute).'
         return message
 
 ####Decorators
@@ -184,10 +194,40 @@ class Context(object):
             raise ValueError("Number of attributes (=%i) and number of cross table"
                     " columns (=%i) must agree" % (len(attributes),
                         len(cross_table[0])))
+        _attributes = attributes[:]
+        for att in _attributes:
+            if _attributes.count(att) > 1:
+                indices = [i for i, x in enumerate(_attributes) if x == att]
+                for i in indices:
+                    _attributes[i] = str(att) + '_{}'.format(i)
+                message =  "Not unique name of attribute '{}', ".format(att)
+                message += "renamed to '{}_n', n \in {}".format(att, indices)
+                print message
+        _objects = objects[:]
+        for obj in _objects:
+            if _objects.count(obj) > 1:
+                indices = [i for i, x in enumerate(_objects) if x == obj]
+                for i in indices:
+                    _objects[i] = str(obj) + '_{}'.format(i)
+                message =  "Not unique name of object '{}', ".format(obj)
+                message += "renamed to '{}_n', n \in {}".format(obj, indices)
+                print message
             
-        self.table = cross_table
-        self.objects = objects
-        self.attributes = attributes
+        self._table = cross_table
+        self._objects = _objects
+        self._attributes = _attributes
+        
+    def get_table(self):
+        return self._table
+    table = property(get_table)
+    
+    def get_attributes(self):
+        return self._attributes
+    attributes = property(get_attributes)
+    
+    def get_objects(self):
+        return self._objects
+    objects = property(get_objects)
         
     def __deepcopy__(self, memo):
         return Context(copy.deepcopy(self.table, memo),
@@ -205,6 +245,11 @@ class Context(object):
         return self.concept_lattice.concepts
         
     concepts = property(get_concepts)
+        
+    def get_attribute_canonical_basis(self,
+                    get_basis=fca.algorithms.aibasis.compute_canonical_basis):
+        """Compute the canonical implication basis on attributes"""
+        return get_basis(self)
     
     def get_attribute_implications(self, 
                                    basis=fca.algorithms.compute_dg_basis,
@@ -289,16 +334,19 @@ class Context(object):
         ia = self.attributes.index(a)
         return self[io][ia]
     
-    def get_aibasis(self):
-        """Compute the canonical basis using ai algorithm"""
-        return fca.algorithms.aibasis.compute_canonical_basis(self)
-    
     @attributes_change
     def add_attribute(self, col, attr_name):
         """Add new attribute to context with given name"""
         for i in range(len(self.objects)):
             self.table[i].append(col[i])
         self.attributes.append(attr_name)
+        if self.attributes.count(attr_name) > 1:
+            indices = [i for i, x in enumerate(self.attributes) if x == attr_name]
+            for i in indices:
+                self.attributes[i] = str(attr_name) + '_{}'.format(i)
+            message =  "Not unique name of attribute '{}', ".format(attr_name)
+            message += "renamed to '{}_n', n \in {}".format(attr_name, indices)
+            print message
 
     def add_column(self, col, attr_name):
         """Deprecated. Use add_attribute."""
@@ -310,6 +358,13 @@ class Context(object):
         """Add new object to context with given name"""
         self.table.append(row)
         self.objects.append(obj_name)
+        if self.objects.count(obj_name) > 1:
+            indices = [i for i, x in enumerate(self.attributes) if x == obj_name]
+            for i in indices:
+                self.attributes[i] = str(obj_name) + '_{}'.format(i)
+            message =  "Not unique name of attribute '{}', ".format(obj_name)
+            message += "renamed to '{}_n', n \in {}".format(obj_name, indices)
+            print message
         
     def add_object_with_intent(self, intent, obj_name):
         row = [(attr in intent) for attr in self.attributes]
@@ -361,6 +416,34 @@ class Context(object):
     @attributes_change
     def rename_attribute(self, old_name, name):
         self.attributes[self.attributes.index(old_name)] = name
+        
+    def oprime_future(self, obj_inds):
+        """
+        Compute the set of all attributes shared by objects in context. Objects
+        are input by indices.
+        
+        @note: template for future reimplementation of whole class 
+        """
+        values_intents = map(list2int, [self.table[i] for i in obj_inds])
+        common_intent = reduce(operator.and_,
+                               values_intents,
+                               (1 << len(self.attributes)) - 1)
+        atts = [self.attributes[j]
+                for j in xrange(len(self.attributes))
+                if common_intent & (1 << j)]
+        return atts
+    
+    def oprime(self, objects):
+        return fca.algorithms.oprime(objects, self)
+    
+    def aprime(self, attributes):
+        return fca.algorithms.aprime(attributes, self)
+    
+    def oclosure(self, objects):
+        return fca.algorithms.oclosure(objects, self)
+    
+    def aclosure(self, attributes):
+        return fca.algorithms.aclosure(attributes, self)
         
     def transpose(self):
         """Return new context with transposed cross-table"""
@@ -571,9 +654,9 @@ class Context(object):
         """        
         def int_repr(arr):
             """
-            Represent every object's intent as decimal number as in list_to_number
+            Represent every object's intent as decimal number
             """
-            return map(self._bool_list_bitvalue, arr)
+            return map(list2int, arr)
         
         dict_cxt = dict(zip(int_repr(self), range(len(self))))#clarification
         keys = dict_cxt.keys()
@@ -600,6 +683,16 @@ class Context(object):
         objects = [self.objects[i] for i in dict_cxt.values()]
         table = [self[i] for i in dict_cxt.values()]
         return Context(table, objects, self.attributes)
+    
+    def reduce_attributes(self):
+        """
+        Attributes reducing.
+        
+        @note: relies on object reducing and context transposition
+        """
+        self = self.transpose()
+        self = self.reduce_objects()
+        return self.transpose()
     
     def complementary(self):
         """
@@ -631,28 +724,29 @@ class Context(object):
         return Context(compound_table,
                        self.objects,
                        self.attributes + complementary_cxt.attributes)
+
+def list2int(lst):
+    """
+    input lst - list of 1 and 0. Treat as binary number, make it decimal integer
+    """
+    def foo(x, y):
+        return (x << 1) + y
+    return reduce(foo, reversed(lst), 0)
     
-    def _bool_list_bitvalue(self, lst):
-        """
-        input lst - list of Trues and Falses. Translate them to 1s and 0s,
-        then concatenate in binstring, then make it decimal integer
-        """
-        return int(''.join([str(int(i)) for i in lst]), 2)
-    
-def make_random_context(obj_num, att_num, d):
+def make_random_context(num_obj, num_att, d):
     """
     Make random context, useful for testing.
     
     @param d: density of the context, i.e. probability of finding a cross in any
     field.
-    @param obj_num: number of object
-    @param att_num: number of attributes  
+    @param num_obj: number of object
+    @param num_att: number of attributes  
     """
-    obj_ls = map(lambda x: 'g' + str(x), range(obj_num))
-    att_ls = map(lambda x: 'm' + str(x), range(att_num))
+    obj_ls = map(lambda x: 'g' + str(x), range(num_obj))
+    att_ls = map(lambda x: 'm' + str(x), range(num_att))
     table = [[int(d > random.random())
-              for _ in xrange(att_num)]
-             for _ in xrange(obj_num)]
+              for _ in xrange(num_att)]
+             for _ in xrange(num_obj)]
     return Context(table, obj_ls, att_ls)
 
 if __name__ == "__main__":
@@ -661,16 +755,3 @@ if __name__ == "__main__":
     doctest.testmod()
     
     """
-    import random
-    import cProfile
-    
-    num_atts = 4
-    num_objs = 50
-    cxt = make_random_context(num_objs, num_atts, 0.3)
-    def check_same():
-        obj_ind = random.choice(range(num_objs))
-        att_ind = random.choice(range(num_atts))
-        assert (cxt.get_object_intent_by_index_old(obj_ind) ==
-                cxt.get_object_intent_by_index(obj_ind))
-    for _ in range(10):
-        check_same()

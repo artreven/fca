@@ -16,13 +16,15 @@ class Test:
     def tearDown(self):
         pass
 
-
     def test_basis_length(self):
-        assert (len(self.cxt_random.get_aibasis()) ==
-                len(self.cxt_random.get_attribute_implications()))
+        aibasis = self.cxt_random.get_attribute_canonical_basis(
+                      get_basis=fca.algorithms.aibasis.compute_canonical_basis)
+        ncbasis = self.cxt_random.get_attribute_implications()
+        assert (len(aibasis) == len(ncbasis))
         
     def test_same_closure(self):
-        aibasis = self.cxt_random.get_aibasis()
+        aibasis = self.cxt_random.get_attribute_canonical_basis(
+                      get_basis=fca.algorithms.aibasis.compute_canonical_basis)
         ncbasis = self.cxt_random.get_attribute_implications()
         for i in range(12):
             for j in range(12):
