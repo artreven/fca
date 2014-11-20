@@ -14,4 +14,4 @@ def test_unit_implication():
         
 def test_unit_conclusion():
     uimp = fca.UnitImplication(set((1,2,3)), set((4,5)))
-    assert uimp.conclusion is not set
+    assert type(uimp.conclusion) != set

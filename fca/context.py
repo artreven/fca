@@ -74,23 +74,27 @@ def clear_cxt_vars(cxt):
         del cxt._cl
     if hasattr(cxt, '_pairs'):
         del cxt._pairs
-    
-def attributes_change(f):
-    """
-    Decorator that clears *get_object_intent* cache when attributes modified.
-    """
+        
+def basis_computation(f):
     def _f(*args):
-        args[0].get_object_intent_by_index.__func__.cache = {}
-        clear_cxt_vars(args[0])
-        f(*args)
+        old_obj_intent = args[0].get_object_intent_by_index 
+        old_att_extent = args[0].get_attribute_extent_by_index
+        args[0].get_object_intent_by_index = memo(args[0].get_object_intent_by_index)
+        args[0].get_attribute_extent_by_index = memo(args[0].get_attribute_extent_by_index)
+        result = f(*args)
+        del args[0].get_attribute_extent_by_index.cache
+        del args[0].get_object_intent_by_index.cache
+        args[0].get_object_intent_by_index = old_obj_intent
+        args[0].get_attribute_extent_by_index = old_att_extent
+        return result
+    _f.__name__ = f.__name__
     return _f
 
-def objects_change(f):
+def objects_attributes_change(f):
     """
-    Decorator that clears *get_attribute_extent* cache when objects modified.
+    Decorator that clears context values when objects or attributes are modified.
     """
     def _f(*args):
-        args[0].get_attribute_extent_by_index.__func__.cache = {}
         clear_cxt_vars(args[0])
         f(*args)
     return _f
@@ -246,11 +250,13 @@ class Context(object):
         
     concepts = property(get_concepts)
         
+    @basis_computation
     def get_attribute_canonical_basis(self,
                     get_basis=fca.algorithms.aibasis.compute_canonical_basis):
         """Compute the canonical implication basis on attributes"""
         return get_basis(self)
     
+    @basis_computation
     def get_attribute_implications(self, 
                                    basis=fca.algorithms.compute_dg_basis,
                                    confirmed=[],
@@ -265,6 +271,7 @@ class Context(object):
     _confirmed = None
     attribute_implications = property(get_attribute_implications)
     
+    @basis_computation
     def get_object_implications(self, 
                                 basis=fca.algorithms.compute_dg_basis,
                                 confirmed=None):
@@ -293,7 +300,6 @@ class Context(object):
                                range(len(self.table[i])))
         return set([self.attributes[i] for i in attrs_indexes])
     
-    @memo
     def get_object_intent_by_index(self, i):
         """
         Return a set of corresponding attributes for row with index i.
@@ -314,7 +320,6 @@ class Context(object):
                               range(len(self.table)))
         return set([self.objects[i] for i in objs_indexes])
     
-    @memo
     def get_attribute_extent_by_index(self, j):
         """
         Return a set of corresponding objects for column with index i.
@@ -334,7 +339,7 @@ class Context(object):
         ia = self.attributes.index(a)
         return self[io][ia]
     
-    @attributes_change
+    @objects_attributes_change
     def add_attribute(self, col, attr_name):
         """Add new attribute to context with given name"""
         for i in range(len(self.objects)):
@@ -353,18 +358,18 @@ class Context(object):
         print "Deprecated. Use add_attribute."
         self.add_attribute(col, attr_name)
 
-    @objects_change
+    @objects_attributes_change
     def add_object(self, row, obj_name):
         """Add new object to context with given name"""
         self.table.append(row)
         self.objects.append(obj_name)
         if self.objects.count(obj_name) > 1:
-            indices = [i for i, x in enumerate(self.attributes) if x == obj_name]
+            indices = [i for i, x in enumerate(self.objects) if x == obj_name]
             for i in indices:
-                self.attributes[i] = str(obj_name) + '_{}'.format(i)
-            message =  "Not unique name of attribute '{}', ".format(obj_name)
+                self.objects[i] = str(obj_name) + '_{}'.format(i)
+            message =  "Not unique name of object '{}', ".format(obj_name)
             message += "renamed to '{}_n', n \in {}".format(obj_name, indices)
-            print message
+            raise Exception, message
         
     def add_object_with_intent(self, intent, obj_name):
         row = [(attr in intent) for attr in self.attributes]
@@ -374,22 +379,19 @@ class Context(object):
         col = [(obj in extent) for obj in self.objects]
         self.add_attribute(col, attr_name)
         
-    @objects_change
-    @attributes_change
+    @objects_attributes_change
     def set_attribute_extent(self, extent, name):
         attr_index = self.attributes.index(name)
         for i in range(len(self.objects)):
             self.table[i][attr_index] = (self.objects[i] in extent)
             
-    @objects_change
-    @attributes_change
+    @objects_attributes_change
     def set_object_intent(self, intent, name):
         obj_index = self.objects.index(name)
         for i in range(len(self.attributes)):
             self.table[obj_index][i] = (self.attributes[i] in intent)
         
-    @objects_change
-    @attributes_change
+    @objects_attributes_change
     def delete_object(self, obj_index):
         del self.table[obj_index]
         del self.objects[obj_index]
@@ -397,8 +399,7 @@ class Context(object):
     def delete_object_by_name(self, obj_name):
         self.delete_object(self.objects.index(obj_name))
     
-    @objects_change
-    @attributes_change
+    @objects_attributes_change
     def delete_attribute(self, attr_index):
         for i in range(len(self.objects)):
             del self.table[i][attr_index]
@@ -407,13 +408,11 @@ class Context(object):
     def delete_attribute_by_name(self, attr_name):
         self.delete_attribute(self.attributes.index(attr_name))
         
-    @objects_change
-    @attributes_change
+    @objects_attributes_change
     def rename_object(self, old_name, name):
         self.objects[self.objects.index(old_name)] = name
         
-    @objects_change
-    @attributes_change
+    @objects_attributes_change
     def rename_attribute(self, old_name, name):
         self.attributes[self.attributes.index(old_name)] = name
         
