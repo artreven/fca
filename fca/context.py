@@ -76,12 +76,12 @@ def clear_cxt_vars(cxt):
         del cxt._pairs
         
 def basis_computation(f):
-    def _f(*args):
+    def _f(*args, **kwargs):
         old_obj_intent = args[0].get_object_intent_by_index 
         old_att_extent = args[0].get_attribute_extent_by_index
         args[0].get_object_intent_by_index = memo(args[0].get_object_intent_by_index)
         args[0].get_attribute_extent_by_index = memo(args[0].get_attribute_extent_by_index)
-        result = f(*args)
+        result = f(*args, **kwargs)
         del args[0].get_attribute_extent_by_index.cache
         del args[0].get_object_intent_by_index.cache
         args[0].get_object_intent_by_index = old_obj_intent
@@ -255,6 +255,11 @@ class Context(object):
                     get_basis=fca.algorithms.aibasis.compute_canonical_basis):
         """Compute the canonical implication basis on attributes"""
         return get_basis(self)
+    
+    def attribute_implications_iter(self):
+        return self.get_attribute_implications(basis=fca.algorithms.dg_basis_iter_simple,
+                                               confirmed=[],
+                                               cond=lambda x: True)
     
     @basis_computation
     def get_attribute_implications(self, 

@@ -84,9 +84,9 @@ def update_preclosed(i, cxt, preclosed, close):
         if premise != impl.get_conclusion():
             basis.append(impl)
             mod_extra.append(non_min_mod[j])
-
+        
     mod_extra.sort(cmp=compare_tuples)
-
+    
     return new_preclosed + mod_extra, basis
 
 
