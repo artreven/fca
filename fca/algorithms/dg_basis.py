@@ -95,6 +95,62 @@ def generalized_compute_dg_basis(attributes,
 
     return relative_basis
 
+########################################
+def dg_basis_iter_simple(cxt,
+                         close=closure_operators.simple_closure,
+                         imp_basis=[],
+                         cond=lambda x: True):
+    """
+    Compute iterator over Duquenne-Guigues basis for a given *cxt* using 
+    optimized Ganter algorithm and simple closure.
+    """
+    aclose = lambda attributes: closure_operators.aclosure(attributes, cxt)
+    return generalized_dg_basis_iter(cxt.attributes, 
+                                     aclose,
+                                     close=close,
+                                     imp_basis=imp_basis,
+                                     cond=cond)
+
+def generalized_dg_basis_iter(attributes,
+                              aclose,
+                              close=closure_operators.simple_closure,
+                              imp_basis=[],
+                              cond=lambda x: True):
+    """Compute iterator over Duquenne-Guigues basis using optimized Ganter's
+    algorithm.
+    
+    *aclose* is a closure operator on the set of attributes.
+    """    
+    relative_basis = []
+    a = close(set(), imp_basis)
+    i = len(attributes)
+    
+    while len(a) < len(attributes):
+        a_closed = set(aclose(a))
+        if a != a_closed and cond(a):
+            basis_imp = Implication(a.copy(), a_closed.copy())
+            yield basis_imp
+            relative_basis.append(basis_imp)
+        if (a_closed - a) & set(attributes[: i]):
+            a -= set(attributes[i :])
+        else:
+            if len(a_closed) == len(attributes):
+                break
+            a = a_closed
+            i = len(attributes)
+        for j in range(i - 1, -1, -1):
+            m = attributes[j]
+            if m in a:
+                a.remove(m)
+            else:
+                b = close(a | set([m]), relative_basis + imp_basis)
+                if not (b - a) & set(attributes[: j]):
+                    a = b
+                    i = j
+                    break
+
+
+########################################
 if __name__ == "__main__":    
     # objects = ['Air Canada', 'Air New Zeland', 'All Nippon Airways',
     #            'Ansett Australia', 'The Australian Airlines Group',

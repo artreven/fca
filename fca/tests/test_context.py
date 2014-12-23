@@ -91,3 +91,7 @@ class Test:
         assert self.cxt2.object_attribute_pairs == [('g1', 'm2'), ('g1', 'm3'),
                                                     ('g2', 'm1'), ('g2', 'm3'),
                                                     ('g3', 'm2')]
+        
+    def test_basis(self):
+        assert len(self.cxt1.get_attribute_canonical_basis()) == 1
+        assert len(self.cxt2.get_attribute_canonical_basis()) == 1
