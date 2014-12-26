@@ -641,7 +641,7 @@ class Context(object):
         
         @return: clarified context
         @note: original context remains unchanged
-        @author: Artem Revenko
+        @note: may change the order of objects
         """        
         dict_cxt = dict(zip(map(tuple, self), self.objects))
         table = map(list, dict_cxt.keys())
@@ -654,7 +654,6 @@ class Context(object):
         
         @return: reduced context
         @note: original context remains unchanged
-        @author: Artem Revenko
         """        
         def int_repr(arr):
             """
@@ -684,8 +683,9 @@ class Context(object):
                     current = new
         for i in reducible:
             del dict_cxt[i]
-        objects = [self.objects[i] for i in dict_cxt.values()]
-        table = [self[i] for i in dict_cxt.values()]
+        order = sorted(dict_cxt.values())
+        objects = [self.objects[i] for i in order]
+        table = [self[i] for i in order]
         return Context(table, objects, self.attributes)
     
     def reduce_attributes(self):
@@ -704,7 +704,6 @@ class Context(object):
         
         @return: complementary context
         @note: original context remains unchanged
-        @author: Artem Revenko
         """
         complementary_attributes = ['not ' + self.attributes[i]
                                for i in xrange(len(self.attributes))]
@@ -720,7 +719,6 @@ class Context(object):
         
         @return: compound context
         @note: original context remains unchanged
-        @author: Artem Revenko
         """
         complementary_cxt = self.complementary() 
         compound_table = [self.table[i] + complementary_cxt.table[i]
