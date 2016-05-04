@@ -1,10 +1,10 @@
-'''
+"""
 Use with Nosetests (https://nose.readthedocs.org/en/latest/)
 
 Created on Dec 17, 2013
 
 @author: artreven
-'''
+"""
 import fca
 import fca.algorithms
 
@@ -28,6 +28,6 @@ class Test:
         ncbasis = self.cxt_random.get_attribute_implications()
         for i in range(12):
             for j in range(12):
-                attr_set = set(('m' + str(i), 'm' + str(j)))
+                attr_set = {'m' + str(i), 'm' + str(j)}
                 assert (fca.algorithms.lin_closure(attr_set, aibasis) ==
                         fca.algorithms.lin_closure(attr_set, ncbasis))

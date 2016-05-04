@@ -33,7 +33,7 @@ def write_dot(cs, path):
 
     own_objects = find_own_objects(cs)
     own_attributes = find_own_attributes(cs)
-    for i in xrange(len(cs)):
+    for i in range(len(cs)):
         output_file.write("c%i [width=0.25]\n" % i)
         if len(own_objects[cs[i]])!=0:
             output_file.write("c%i -> c%i" % (i, i))
@@ -55,7 +55,7 @@ def write_dot(cs, path):
                 "labeldistance=2,labelangle=90,color=transparent]\n")
 
     parents = fca.compute_covering_relation(cs)
-    for i in xrange(len(cs)):
+    for i in range(len(cs)):
         for p in parents[cs[i]]:
             output_file.write("c%i -> c%i\n" % (cs.index(p), i))
     output_file.write("}")
@@ -79,15 +79,15 @@ def uwrite_dot(cs, path, full=False):
     own_objects = find_own_objects(cs)
     own_attributes = find_own_attributes(cs)
 
-    for i in xrange(len(cs)):
+    for i in range(len(cs)):
         output_file.write("c%i [width=0.25]\n" % i)
 
     parents = fca.compute_covering_relation(cs)
-    for i in xrange(len(cs)):
+    for i in range(len(cs)):
         for p in parents[cs[i]]:
             output_file.write("c%i -> c%i\n" % (cs.index(p), i))
 
-    for i in xrange(len(cs)):
+    for i in range(len(cs)):
         if len(own_objects[cs[i]])!=0:
             output_file.write("c%i -> c%i" % (i, i))
             # TODO:

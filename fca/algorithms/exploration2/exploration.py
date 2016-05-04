@@ -37,15 +37,15 @@ class ExplorationContext(object):
     def set_basis(self, basis):
         self._basis = basis
 
-    def get_intent(self, object):
-        return copy(self._cxt.get_object_intent(object))
+    def get_intent(self, obj):
+        return copy(self._cxt.get_object_intent(obj))
 
     def get_extent(self, attribute):
         return copy(self._cxt.get_attribute_extent(attribute))
 
-    def add_object(self, object, intent):
+    def add_object(self, obj, intent):
         if self._basis.respect_background_knowledge(intent):
-            self._cxt.add_object_with_intent(intent, object)
+            self._cxt.add_object_with_intent(intent, obj)
         else:
             raise IllegalContextModification()
 
@@ -96,9 +96,9 @@ class ExplorationSession(object):
     def accept_implication(self, imp):
         self._basis.add_background_implication(imp)
 
-    def reject_implication(self, imp, object, intent):
+    def reject_implication(self, imp, obj, intent):
         if not imp.is_respected(intent):
-            self._cxt.add_object(object, intent)
+            self._cxt.add_object(obj, intent)
         else:
             raise FalseCounterexample()
 

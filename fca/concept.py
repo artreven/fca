@@ -50,7 +50,7 @@ class Concept(object):
         else:
             # TODO: Sometimes |extent| > 0, but intent is M.
             i = "M"
-        if len(self.meta.keys()) != 0:
+        if len(list(self.meta.keys())) != 0:
             s = " meta: {0}".format(self.meta)
         else:
             s = ""

@@ -1,4 +1,4 @@
-from __future__ import division
+
 
 def compute_intent_size(lattice):
     number_of_attributes = len(lattice.context.attributes)

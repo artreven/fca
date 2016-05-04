@@ -16,7 +16,7 @@ def compute_probability(lattice):
             log_p_B = 0
         
         not_B = set()
-        for attr in p_m.keys():
+        for attr in list(p_m.keys()):
             if not attr in B:
                 not_B.add(attr)
         for k in range(n + 1):
@@ -39,10 +39,10 @@ def compute_probability(lattice):
                     # print k, t
             except:
                 t = 0
-            nom = range(n - k + 1, n + 1)
-            den = range(1, k + 1)
+            nom = list(range(n - k + 1, n + 1))
+            den = list(range(1, k + 1))
             if len(den) != len(nom):
-                print "False"
+                print("False")
             for i in range(len(nom)):
                 t *= nom[i] / float(den[i])
             ans += t
@@ -80,13 +80,13 @@ if __name__ == '__main__':
     # Test code
     from fca import ConceptLattice, Context
     
-    ct = [[True, False, False, True],\
-          [True, False, True, False],\
-          [False, True, True, False],\
+    ct = [[True, False, False, True],
+          [True, False, True, False],
+          [False, True, True, False],
           [False, True, True, True]]
     objs = [1, 2, 3, 4]
     attrs = ['a', 'b', 'c', 'd']
     c = Context(ct, objs, attrs)
     cs = ConceptLattice(c)
     ci = compute_probability(cs)
-    print ci
+    print(ci)

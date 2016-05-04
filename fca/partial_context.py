@@ -4,7 +4,7 @@ import fca.algorithms
 from fca import Context
 from fca.algorithms.closure_operators import aprime, oprime
 from fca.algorithms.closure_operators import simple_closure as closure
-from compare_context import subseteq_table
+from .compare_context import subseteq_table
 from fca.algorithms.dg_basis import compute_partial_dg_basis
 from copy import copy, deepcopy
 
@@ -46,10 +46,10 @@ class PartialContext(object):
         new_attributes = self.objects[:]
         new_x_table = []
         new_q_table = []
-        for j in xrange(len(self.attributes)):
+        for j in range(len(self.attributes)):
             x_line = []
             q_line = []
-            for i in xrange(len(self.objects)):
+            for i in range(len(self.objects)):
                 x_line.append(self.x_context.table[i][j])
                 q_line.append(self.q_context.table[i][j])
             new_x_table.append(x_line)
@@ -107,16 +107,16 @@ class PartialContext(object):
             self.x_context.set_object_intent(new_xintent, o)
             new_qintent = set([a for a in qintent
                                  if a in new_xintent or
-                                 closure(new_xintent | set([a]), implications)
+                                 closure(new_xintent | {a}, implications)
                                                                     <= qintent
                              ])
             self.q_context.set_object_intent(new_qintent, o)
             # TODO: Remove printing
             if xintent != new_xintent or qintent != new_qintent:
-                print 'Object', o
-                print self._intent_to_str(xintent, qintent)
-                print 'completed to '
-                print self._intent_to_str(new_xintent, new_qintent)
+                print('Object', o)
+                print(self._intent_to_str(xintent, qintent))
+                print('completed to ')
+                print(self._intent_to_str(new_xintent, new_qintent))
             
     def intents(self):
         for obj in self.objects:

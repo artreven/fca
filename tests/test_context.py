@@ -1,10 +1,10 @@
-'''
+"""
 Use with Nosetests (https://nose.readthedocs.org/en/latest/)
 
 Created on Jan 8, 2014
 
 @author: artreven
-'''
+"""
 import fca
 
 class Test:
@@ -94,4 +94,6 @@ class Test:
         
     def test_basis(self):
         assert len(self.cxt1.get_attribute_canonical_basis()) == 1
+        imp = self.cxt1.get_attribute_canonical_basis()[0]
+        assert str(imp) == "m1 => m3"
         assert len(self.cxt2.get_attribute_canonical_basis()) == 1

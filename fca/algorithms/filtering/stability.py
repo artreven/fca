@@ -6,7 +6,7 @@ stability.py
 Created by Nikita Romashkin on 2010-01-19.
 
 """
-from __future__ import division
+
 
 from copy import deepcopy
 

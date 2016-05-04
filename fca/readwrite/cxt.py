@@ -64,12 +64,12 @@ def read_cxt(path):
     number_of_attributes = int(input_file.readline().strip())
     input_file.readline() # Empty line
 
-    objects = [input_file.readline().strip() for i in xrange(number_of_objects)]
-    attributes = [input_file.readline().strip() for i in xrange(number_of_attributes)]
+    objects = [input_file.readline().strip() for i in range(number_of_objects)]
+    attributes = [input_file.readline().strip() for i in range(number_of_attributes)]
 
     table = []
-    for i in xrange(number_of_objects):
-        line = map(lambda c: c=="X", input_file.readline().strip())
+    for i in range(number_of_objects):
+        line = [c=="X" for c in input_file.readline().strip()]
         table.append(line)
 
     input_file.close()
@@ -84,16 +84,16 @@ def write_cxt(context, path):
     output_file.write(str(len(context.objects))+"\n")
     output_file.write(str(len(context.attributes))+"\n\n")
 
-    for i in xrange(len(context.objects)):
+    for i in range(len(context.objects)):
         output_file.write(str(context.objects[i]))
         output_file.write("\n")
 
-    for i in xrange(len(context.attributes)):
+    for i in range(len(context.attributes)):
         output_file.write(str(context.attributes[i]))
         output_file.write("\n")
 
     cross = {True : "X", False : "."}
-    for i in xrange(len(context.objects)):
+    for i in range(len(context.objects)):
         output_file.write("".join([cross[b] for b in context[i]]))
         output_file.write("\n")
 
@@ -106,16 +106,16 @@ def uwrite_cxt(context, path):
     output_file.write(str(len(context.objects))+"\n")
     output_file.write(str(len(context.attributes))+"\n\n")
 
-    for i in xrange(len(context.objects)):
+    for i in range(len(context.objects)):
         output_file.write(context.objects[i])
         output_file.write("\n")
 
-    for i in xrange(len(context.attributes)):
+    for i in range(len(context.attributes)):
         output_file.write(context.attributes[i])
         output_file.write("\n")
 
     cross = {True : "X", False : "."}
-    for i in xrange(len(context.objects)):
+    for i in range(len(context.objects)):
         output_file.write("".join([cross[b] for b in context[i]]))
         output_file.write("\n")
 
@@ -130,12 +130,12 @@ def uread_cxt(path):
     number_of_attributes = int(input_file.readline().strip())
     input_file.readline() # Empty line
 
-    objects = [unicode(input_file.readline().strip(), "utf-8") for i in xrange(number_of_objects)]
-    attributes = [unicode(input_file.readline().strip(), "utf-8") for i in xrange(number_of_attributes)]
+    objects = [str(input_file.readline().strip(), "utf-8") for i in range(number_of_objects)]
+    attributes = [str(input_file.readline().strip(), "utf-8") for i in range(number_of_attributes)]
 
     table = []
-    for i in xrange(number_of_objects):
-        line = map(lambda c: c=="X", input_file.readline().strip())
+    for i in range(number_of_objects):
+        line = [c=="X" for c in input_file.readline().strip()]
         table.append(line)
 
     input_file.close()

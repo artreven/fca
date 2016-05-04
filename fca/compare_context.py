@@ -3,7 +3,7 @@
 
 def subseteq_table(table_left, table_right):
     """
-    Checks whether one binary relation of two sets (presented as  bool table) is
+    Checks whether one binary relation of two sets (presented as bool table) is
     subset or equals another. Tables should be given as lists of bool lists and
     should have the same dimensions. Result is bool.
     table_left ?\subseteq table_right

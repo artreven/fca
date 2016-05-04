@@ -1,13 +1,13 @@
 import fca
 
-import separation
-import probability
-import stability
+from . import separation
+from . import probability
+from . import stability
 
 def compute_index(lattice, function, name):
     indexes = function(lattice)
     
-    for concept in indexes.items():
+    for concept in list(indexes.items()):
         if concept[0].meta:
             concept[0].meta[name] = concept[1]
         else:
@@ -24,20 +24,21 @@ def filter_concepts(lattice, function, mode, opt=1):
     Additionaly add attribute, containing inforamtion about indexes, to the new lattice
     """
     def _filter_value(lattice, indexes, value):
-        filtered_concepts = [item for item in indexes.items() if item[1]>=value]
+        filtered_concepts = [item for item in list(indexes.items())
+                             if item[1]>=value]
         return fca.ConceptSystem([c[0] for c in filtered_concepts])
     
     def _filter_abs(lattice, indexes, n):
-        cmp_ = lambda x,y: cmp(x[1], y[1])
-        sorted_indexes = sorted(indexes.items(), cmp_, reverse=True)
+        key_ = lambda x: x[1] #TODO: check if this works. before it was cmp
+        sorted_indexes = sorted(list(indexes.items()), key_, reverse=True)
         filtered_concepts = sorted_indexes[:int(n)]
             
         return fca.ConceptSystem([c[0] for c in filtered_concepts])
     
     def _filter_part(lattice, indexes, part):
         n = int(len(lattice) * part)
-        cmp_ = lambda x,y: cmp(x[1], y[1])
-        sorted_indexes = sorted(indexes.items(), cmp_, reverse=True)
+        key_ = lambda x: x[1] #TODO: check if this works. before it was cmp
+        sorted_indexes = sorted(list(indexes.items()), key_, reverse=True)
         filtered_concepts = sorted_indexes[:n]
         
         values = sorted_indexes
@@ -63,13 +64,13 @@ def filter_concepts(lattice, function, mode, opt=1):
 if __name__ == '__main__':
     # Test code
     from fca import ConceptLattice, Context
-    from probability import compute_probability
-    from stability import (compute_estability, compute_istability)
-    from separation import compute_separation_index
+    from .probability import compute_probability
+    from .stability import (compute_estability, compute_istability)
+    from .separation import compute_separation_index
     
-    ct = [[True, False, False, True],\
-          [True, False, True, False],\
-          [False, True, True, False],\
+    ct = [[True, False, False, True],
+          [True, False, True, False],
+          [False, True, True, False],
           [False, True, True, True]]
     objs = ['1', '2', '3', '4']
     attrs = ['a', 'b', 'c', 'd']
@@ -82,4 +83,4 @@ if __name__ == '__main__':
     # compute_index(cl, compute_istability, "Intensional Stability")
     # print cl
     cs = filter_concepts(cl, compute_istability, "abs", 2)
-    print cs
+    print(cs)

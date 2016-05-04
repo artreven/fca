@@ -4,7 +4,7 @@ Holds a function that computes Duquenne-Guigues basis for a given context
 """
 import copy
 
-import closure_operators
+from . import closure_operators
 from fca.implication import Implication
 import fca
 
@@ -143,7 +143,7 @@ def generalized_dg_basis_iter(attributes,
             if m in a:
                 a.remove(m)
             else:
-                b = close(a | set([m]), relative_basis + imp_basis)
+                b = close(a | {m}, relative_basis + imp_basis)
                 if not (b - a) & set(attributes[: j]):
                     a = b
                     i = j
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     attrs = ['a']
     cxt = fca.Context(ct, objs, attrs)
 
-    imp_basis = compute_dg_basis(cxt, imp_basis=[Implication(set(), set(['a']))])
+    imp_basis = compute_dg_basis(cxt, imp_basis=[Implication(set(), {'a'})])
 
     for imp in imp_basis:
-        print imp
+        print(imp)

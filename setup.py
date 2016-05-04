@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-from distribute_setup import use_setuptools
-use_setuptools()
-
-from setuptools import setup
+from distutils.core import setup
 
 setup(name             = "fca",
       version          = "0.0.2",
@@ -14,4 +11,5 @@ setup(name             = "fca",
                           "Implications", "Artificial Intelligence"],
       license          = "LGPL",
       platforms        = ["Linux", "Mac OS X", "Windows XP/2000/NT"],
-)
+      requires=['numpy', 'numpy']
+      )

@@ -2,7 +2,7 @@
 # encoding: utf-8
 import unittest
 
-from exploration import (AttributeExploration, ExplorationDB, 
+from .exploration import (AttributeExploration, ExplorationDB, 
                         NotCounterexample, IllegalContextModification)
 import fca
 
@@ -44,9 +44,9 @@ class DummyFoolishExpert(object):
 
 class ExplorationTest(unittest.TestCase):
     def setUp(self):
-        table = [[True, False, False, True],\
-                 [True, False, True, False],\
-                 [False, True, True, False],\
+        table = [[True, False, False, True],
+                 [True, False, True, False],
+                 [False, True, True, False],
                  [False, True, True, True]]
         objs = ['1', '2', '3', '4']
         attrs = ['a', 'b', 'c', 'd']
@@ -142,8 +142,8 @@ class TrianglesTest(unittest.TestCase):
         
     def test_all(self):
         basis = [
-                Implication(set([acute, right]), set([equilateral, isosceles])),
-                Implication(set([equilateral]), set([isosceles, acute]))
+                Implication({acute, right}, {equilateral, isosceles}),
+                Implication({equilateral}, {isosceles, acute})
                 ]
         expert = GenericExpert(basis)
         exploration = AttributeExploration(self.db, expert)

@@ -1,10 +1,10 @@
-'''
+"""
 Use with Nosetests (https://nose.readthedocs.org/en/latest/)
 
 Created on Dec 23, 2014
 
 @author: artreven
-'''
+"""
 import fca
 
 def test_random_dg_iter():

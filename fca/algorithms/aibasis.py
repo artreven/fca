@@ -1,17 +1,17 @@
-'''
+"""
 Attribute Incremental algorithm for finding the canonical basis.
 
 @author: Sergei Obiedkov
-'''
+"""
 
 import fca
 
 from fca.algorithms import closure_operators
 
 def kclosure(s, k, cxt):
-    '''
+    """
     Return the closure of s in cxt restricted to the first k attributes.
-    '''
+    """
     closure = set(cxt.attributes[:k])
     for o in cxt.examples():
         if s == closure:
@@ -20,16 +20,17 @@ def kclosure(s, k, cxt):
             closure &= o
     return closure
 
-# todo: optimize!
+
 def compare_tuples(p, r):
-    '''
+    """
     Compare tuples by the second element (set of attributes) wrt lectical order.
-    '''
+    """
     diff = p[1] ^ r[1]
     if diff:
         return 1 if sorted(diff)[0] in p[1] else -1
     else:
         return 0
+
 
 def compute_canonical_basis(cxt, close=closure_operators.simple_closure):
     preclosed = [(set(cxt.objects), set())]
@@ -39,6 +40,7 @@ def compute_canonical_basis(cxt, close=closure_operators.simple_closure):
     for i in range(len(cxt.attributes)):
         preclosed, basis = update_preclosed(i, cxt, preclosed, close)
     return basis
+
 
 def update_preclosed(i, cxt, preclosed, close):
 
@@ -85,7 +87,7 @@ def update_preclosed(i, cxt, preclosed, close):
             basis.append(impl)
             mod_extra.append(non_min_mod[j])
         
-    mod_extra.sort(cmp=compare_tuples)
+    mod_extra.sort(key=lambda x: x[1])
     
     return new_preclosed + mod_extra, basis
 
@@ -146,11 +148,11 @@ if __name__ == '__main__':
         start = time.time()
         basis = algo(cxt)
         end = time.time()
-        print len(basis), end - start
+        print(len(basis), end - start)
         return basis, end - start
 
     cxt = fca.read_cxt(sys.argv[1])
-    print 'Ganter:'
+    print('Ganter:')
     timeit(fca.compute_dg_basis, cxt)
-    print 'Incremental:'
+    print('Incremental:')
     timeit(compute_canonical_basis, cxt)

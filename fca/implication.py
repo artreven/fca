@@ -10,22 +10,18 @@ class Implication(object):
     Examples
     ========
     
-    >>> imp = Implication(set(('a', 'b',)), set(('c',)))
+    >>> imp = Implication({'a', 'b'}, {'c'})
     >>> imp
     a, b => c
     >>> print imp
     a, b => c
-    >>> imp.is_respected(set(('a', 'b',)))
+    >>> imp.is_respected({'a', 'b'})
     False
-    >>> imp.is_respected(set(('a', 'b', 'd')))
-    False
-    >>> imp.is_respected(set(('a', 'b', 'c',)))
+    >>> imp.is_respected({'a', 'b', 'c'})
     True
-    >>> imp.is_respected(set(('a', 'c',)))
+    >>> imp.is_respected({'a', 'c'})
     True
-    >>> imp.is_respected(set(('b')))
-    True
-    >>> imp.is_respected(set(('c')))
+    >>> imp.is_respected({'b'})
     True
     """
 
@@ -71,12 +67,15 @@ class Implication(object):
     def __unicode__(self):
         return self.__repr__()
 
-    def __cmp__(self, other):
-        if ((self._premise == other._premise) and 
-            (self._conclusion == other._conclusion)):
-            return 0
+    def __eq__(self, other):
+        if ((self.premise == other.premise) and
+                (self.conclusion == other.conclusion)):
+            return 1
         else:
-            return -1
+            return 0
+
+    def __hash__(self):
+        return hash(str(self))
             
     def is_respected(self, some_set):
         """Checks whether *some_set* respects an implication or not"""
@@ -98,19 +97,22 @@ class Implication(object):
         premise = str2set(str_premise)
         conclusion = str2set(str_conclusion)
         return cls(premise, conclusion)
+
         
 class UnitImplication(Implication):
     def __init__(self, premise = set(), conclusion = None):
         """
         Create implication from set *premise* and element *conclusion*
         """
-        if isinstance(conclusion, set):
-            conclusion = frozenset(conclusion)
-        set_conclusion = set((conclusion,))
-        super(UnitImplication, self).__init__(premise, set_conclusion)
+        # if isinstance(conclusion, set):
+        #     conclusion = frozenset(conclusion)
+        set_conclusion = {conclusion}
+        super().__init__(premise, set_conclusion)
 
     def get_reduced_conclusion(self):
-        return super(UnitImplication, self).conclusion.pop()
+        conclusion = super().conclusion
+        assert len(conclusion) == 1
+        return conclusion
     
     conclusion = property(get_reduced_conclusion)
     

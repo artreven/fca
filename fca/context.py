@@ -9,6 +9,7 @@ import operator
 import fca.algorithms
 
 import numpy as np
+from functools import reduce
 
 ####Exceptions
 class ContextException(Exception):
@@ -206,7 +207,7 @@ class Context(object):
                     _attributes[i] = str(att) + '_{}'.format(i)
                 message =  "Not unique name of attribute '{}', ".format(att)
                 message += "renamed to '{}_n', n \in {}".format(att, indices)
-                print message
+                print(message)
         _objects = objects[:]
         for obj in _objects:
             if _objects.count(obj) > 1:
@@ -215,7 +216,7 @@ class Context(object):
                     _objects[i] = str(obj) + '_{}'.format(i)
                 message =  "Not unique name of object '{}', ".format(obj)
                 message += "renamed to '{}_n', n \in {}".format(obj, indices)
-                print message
+                print(message)
             
         self._table = cross_table
         self._objects = _objects
@@ -239,6 +240,7 @@ class Context(object):
                        self.attributes[:])
         
     def get_concept_lattice(self):
+        # TODO: put _cl in init. What happens if context is modified?
         if not hasattr(self, '_cl'):
             self._cl = fca.ConceptLattice(self)
         return self._cl
@@ -293,7 +295,7 @@ class Context(object):
         Generator. Generate set of corresponding attributes
         for each row (object) of context.
         """
-        for obj_ind in xrange(len(self.objects)):
+        for obj_ind in range(len(self.objects)):
             yield self.get_object_intent_by_index(obj_ind)
             
     def intents(self):
@@ -301,8 +303,7 @@ class Context(object):
     
     def get_object_intent_by_index_old(self, i):
         """Return a set of corresponding attributes for row with index i"""
-        attrs_indexes = filter(lambda j: self.table[i][j],
-                               range(len(self.table[i])))
+        attrs_indexes = [j for j in range(len(self.table[i])) if self.table[i][j]]
         return set([self.attributes[i] for i in attrs_indexes])
     
     def get_object_intent_by_index(self, i):
@@ -311,7 +312,7 @@ class Context(object):
         @note: refactored by Artem Revenko to increase performance.  
         """
         atts = [self.attributes[j]
-                for j in xrange(len(self.attributes))
+                for j in range(len(self.attributes))
                 if self.table[i][j]]
         return set(atts)
     
@@ -321,8 +322,7 @@ class Context(object):
     
     def get_attribute_extent_by_index_old(self, j):
         """Return a set of corresponding objects for column with index i"""
-        objs_indexes = filter(lambda i: self.table[i][j],
-                              range(len(self.table)))
+        objs_indexes = [i for i in range(len(self.table)) if self.table[i][j]]
         return set([self.objects[i] for i in objs_indexes])
     
     def get_attribute_extent_by_index(self, j):
@@ -331,7 +331,7 @@ class Context(object):
         @note: refactored by Artem Revenko to increase performance. 
         """
         objects = [self.objects[i]
-                   for i in xrange(len(self.objects))
+                   for i in range(len(self.objects))
                    if self.table[i][j]]
         return set(objects)
     
@@ -356,11 +356,11 @@ class Context(object):
                 self.attributes[i] = str(attr_name) + '_{}'.format(i)
             message =  "Not unique name of attribute '{}', ".format(attr_name)
             message += "renamed to '{}_n', n \in {}".format(attr_name, indices)
-            print message
+            print(message)
 
     def add_column(self, col, attr_name):
         """Deprecated. Use add_attribute."""
-        print "Deprecated. Use add_attribute."
+        print("Deprecated. Use add_attribute.")
         self.add_attribute(col, attr_name)
 
     @objects_attributes_change
@@ -374,7 +374,7 @@ class Context(object):
                 self.objects[i] = str(obj_name) + '_{}'.format(i)
             message =  "Not unique name of object '{}', ".format(obj_name)
             message += "renamed to '{}_n', n \in {}".format(obj_name, indices)
-            raise Exception, message
+            raise Exception(message)
         
     def add_object_with_intent(self, intent, obj_name):
         row = [(attr in intent) for attr in self.attributes]
@@ -428,12 +428,12 @@ class Context(object):
         
         @note: template for future reimplementation of whole class 
         """
-        values_intents = map(list2int, [self.table[i] for i in obj_inds])
+        values_intents = list(map(list2int, [self.table[i] for i in obj_inds]))
         common_intent = reduce(operator.and_,
                                values_intents,
                                (1 << len(self.attributes)) - 1)
         atts = [self.attributes[j]
-                for j in xrange(len(self.attributes))
+                for j in range(len(self.attributes))
                 if common_intent & (1 << j)]
         return atts
     
@@ -454,9 +454,9 @@ class Context(object):
         new_objects = self.attributes[:]
         new_attributes = self.objects[:]
         new_cross_table = []
-        for j in xrange(len(self.attributes)):
+        for j in range(len(self.attributes)):
             line = []
-            for i in xrange(len(self.objects)):
+            for i in range(len(self.objects)):
                 line.append(self.table[i][j])
             new_cross_table.append(line)
         return Context(new_cross_table, new_objects, new_attributes)
@@ -478,12 +478,13 @@ class Context(object):
                        attribute_names)
         
     def get_object_attribute_pairs(self):
+        # TODO: add _pairs to init or delete the method
         if not hasattr(self, '_pairs'):
             num_objs = len(self.objects)
             num_atts = len(self.attributes)
             pairs = [(self.objects[i], self.attributes[j])
-                     for i in xrange(num_objs)
-                     for j in xrange(num_atts)
+                     for i in range(num_objs)
+                     for j in range(num_atts)
                      if self.table[i][j] == 1]
             self._pairs = pairs
         return self._pairs
@@ -534,7 +535,7 @@ class Context(object):
         values -- an attribute-value dictionary
         
         """
-        self._check_attribute_names(values.keys())
+        self._check_attribute_names(list(values.keys()))
         if mode == "and":
             indices = [i for i in range(len(self)) if self._has_values(i, values)]
         elif mode == "or":
@@ -593,9 +594,9 @@ class Context(object):
     
     def __repr__(self):
         output = ", ".join(map(str, self.attributes)) + "\n"
-        objects_list = map(str, self.objects)
+        objects_list = list(map(str, self.objects))
         cross = {True : "X", False : "."}
-        for i in xrange(len(self.objects)):
+        for i in range(len(self.objects)):
             output += (objects_list[i] + "\t" + 
                        "".join([cross[b] for b in self[i]]) + "\n")
         return output
@@ -643,9 +644,9 @@ class Context(object):
         @note: original context remains unchanged
         @note: may change the order of objects
         """        
-        dict_cxt = dict(zip(map(tuple, self), self.objects))
-        table = map(list, dict_cxt.keys())
-        objects = dict_cxt.values()
+        dict_cxt = dict(list(zip(list(map(tuple, self)), self.objects)))
+        table = list(map(list, list(dict_cxt.keys())))
+        objects = list(dict_cxt.values())
         return Context(table, objects, self.attributes)
         
     def reduce_objects(self):
@@ -659,10 +660,10 @@ class Context(object):
             """
             Represent every object's intent as decimal number
             """
-            return map(list2int, arr)
+            return list(map(list2int, arr))
         
-        dict_cxt = dict(zip(int_repr(self), range(len(self))))#clarification
-        keys = dict_cxt.keys()
+        dict_cxt = dict(list(zip(int_repr(self), list(range(len(self))))))#clarification
+        keys = list(dict_cxt.keys())
         reducible = set()
         M = (1 << len(self.attributes)) - 1              #set of attributes repr
         for i in range(len(keys)):                      #checking if i reducible
@@ -694,9 +695,7 @@ class Context(object):
         
         @note: relies on object reducing and context transposition
         """
-        self = self.transpose()
-        self = self.reduce_objects()
-        return self.transpose()
+        return self.transpose().reduce_objects().transpose()
     
     def complementary(self):
         """
@@ -706,11 +705,11 @@ class Context(object):
         @note: original context remains unchanged
         """
         complementary_attributes = ['not ' + self.attributes[i]
-                               for i in xrange(len(self.attributes))]
+                               for i in range(len(self.attributes))]
         complementary_table = []
         for i in range(len(self.objects)):
             complementary_table.append([not self.table[i][j]
-                                   for j in xrange(len(self.attributes))])
+                                   for j in range(len(self.attributes))])
         return Context(complementary_table, self.objects, complementary_attributes)
     
     def compound(self):
@@ -722,7 +721,7 @@ class Context(object):
         """
         complementary_cxt = self.complementary() 
         compound_table = [self.table[i] + complementary_cxt.table[i]
-                          for i in xrange(len(self.objects))]
+                          for i in range(len(self.objects))]
         return Context(compound_table,
                        self.objects,
                        self.attributes + complementary_cxt.attributes)
@@ -744,11 +743,11 @@ def make_random_context(num_obj, num_att, d):
     @param num_obj: number of object
     @param num_att: number of attributes  
     """
-    obj_ls = map(lambda x: 'g' + str(x), range(num_obj))
-    att_ls = map(lambda x: 'm' + str(x), range(num_att))
+    obj_ls = ['g' + str(x) for x in range(num_obj)]
+    att_ls = ['m' + str(x) for x in range(num_att)]
     table = [[int(d > random.random())
-              for _ in xrange(num_att)]
-             for _ in xrange(num_obj)]
+              for _ in range(num_att)]
+             for _ in range(num_obj)]
     return Context(table, obj_ls, att_ls)
 
 if __name__ == "__main__":

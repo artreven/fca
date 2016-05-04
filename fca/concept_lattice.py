@@ -1,4 +1,4 @@
-from algorithms import norris
+from .algorithms import norris
 
 class ConceptLattice(object):
     """ConceptLattice class
@@ -78,7 +78,7 @@ class ConceptLattice(object):
     def __str__(self):
         s = ""
         for c in self._concepts:
-            s = s + "%s\n" % str(c)
+            s += "%s\n" % str(c)
         return s[:-1]
 
     def index(self, concept):

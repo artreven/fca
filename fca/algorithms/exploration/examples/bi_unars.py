@@ -70,8 +70,8 @@ class Equality(object):
 class CommandLineExpert(object):
 
     def is_valid(self, imp):
-        print "{0}".format(imp)
-        return input('Is the following implication valid? Enter "True" or "False": {0}'.format(imp))
+        print("{0}".format(imp))
+        return eval(input('Is the following implication valid? Enter "True" or "False": {0}'.format(imp)))
                                                                                     
     def explore(self, exploration):
         while exploration.get_open_implications():
@@ -83,9 +83,9 @@ class CommandLineExpert(object):
                 exploration.reject_implication(imp)
 
     def provide_counterexample(self, imp):
-        print 'Provide a counterexample by typing in two tuples.'
-        bu = BiUnar(input('f: '), input('g: '))
-        if input('Add as a partial example? Enter "True" or "False": '):
+        print('Provide a counterexample by typing in two tuples.')
+        bu = BiUnar(eval(input('f: ')), eval(input('g: ')))
+        if eval(input('Add as a partial example? Enter "True" or "False": ')):
             intent = generate_partial_counterexample(imp, bu)
         else:
             intent = [bu_intent(bu)] * 2    # since our context is partial
@@ -98,7 +98,7 @@ def compose(f, g):
     
             
 def generate_examples(n):
-    maps = itertools.product(range(1, n + 1), repeat=n)
+    maps = itertools.product(list(range(1, n + 1)), repeat=n)
     return (BiUnar(mm[0], mm[1]) for mm in itertools.product(maps, repeat=2))
     
     
@@ -131,7 +131,7 @@ def generate_context(n, attributes):
     
     
 def generate_background_implications(attributes):
-    return [Implication(set([x, y]), set([z]))
+    return [Implication({x, y}, {z})
                     for x in attributes
                     for y in attributes
                     for z in attributes

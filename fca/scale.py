@@ -3,7 +3,7 @@
 Holds scale class for conceptual scaling
 """
 
-from context import Context
+from .context import Context
 
 class Scale(Context):
     """
@@ -51,15 +51,15 @@ class NominalScale(Scale):
             table.append(row)
         super(NominalScale, self).__init__(Context(table,
                                                    objects,
-                                                   map(str, values)))
+                                                   list(map(str, values))))
 
 
 class OrdinalScale(Scale):
-    def __init__(self, min, max, mode="leq"):
+    def __init__(self, min_, max_, mode="leq"):
         """Generate an ordinal scale for values between min and max.
         
         """
-        values = range(min, max + 1)
+        values = list(range(min_, max_ + 1))
         objects = ["value == %s" % v for v in values]
         table = []
         if mode == "geq":

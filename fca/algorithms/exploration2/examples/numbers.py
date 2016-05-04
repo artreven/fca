@@ -4,7 +4,7 @@
 from fca.algorithms.exploration2.exploration import *
 
 def is_prime(n):
-    for m in xrange(n - 1, 1, -1):
+    for m in range(n - 1, 1, -1):
         if n % m == 0:
             return False
 
@@ -12,7 +12,7 @@ def is_prime(n):
 
 def is_factorial(n):
     f = 1
-    for m in xrange(1, n + 1):
+    for m in range(1, n + 1):
         f *= m
         if f == n:
             return True
@@ -37,11 +37,11 @@ class CommandLineExploration(Exploration):
         self._session = self.create_session()
 
     def is_valid(self, imp):
-        print "{0}".format(imp)
-        return input('Is the following implication valid? Enter "True" or "False":\n'.format(imp))
+        print("{0}".format(imp))
+        return eval(input('Is the following implication valid? Enter "True" or "False":\n'.format(imp)))
 
     def ask_for_counterexample(self):
-        return input('Provide counterexample:')
+        return eval(input('Provide counterexample:'))
 
     def get_intent(self, number):
         return {attr for attr in self._cxt.attributes if self.d[attr](number) }
@@ -54,7 +54,7 @@ class CommandLineExploration(Exploration):
             else:
                 counterexample = self.ask_for_counterexample()
                 intent = self.get_intent(counterexample)
-                print intent
+                print(intent)
                 self._session.reject_implication(imp, counterexample, intent)
 
 if __name__ == "__main__":

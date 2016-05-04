@@ -18,13 +18,13 @@ def read_txt_with_names(path):
     """
     input_file = open(path, "rb")
     rdr = csv.reader(input_file, delimiter="\t")
-    rec = rdr.next()                            # read attributes names
+    rec = next(rdr)                            # read attributes names
 
     attributes = []
     for attr in rec:
         attributes.append(str(attr).strip())
     
-    rdr.next()                                  # empty line
+    next(rdr)                                  # empty line
     
     table = []
     objects = []
@@ -81,13 +81,13 @@ def read_txt(path):
     """
     input_file = open(path, "rb")
     rdr = csv.reader(input_file, delimiter="\t")
-    rec = rdr.next() # read attributes names
+    rec = next(rdr) # read attributes names
 
     attributes = []
     for attr in rec:
         attributes.append(str(attr).strip())
     
-    rdr.next() # empty line
+    next(rdr) # empty line
     
     table = []
     for rec in rdr:
@@ -146,19 +146,19 @@ def read_mv_txt(path):
     """
     input_file = open(path, "rb")
     rdr = csv.reader(input_file, delimiter="\t")
-    rec = rdr.next() # read objects names
+    rec = next(rdr) # read objects names
     
     objects = []
     for obj in rec:
         objects.append(str(obj).strip())
     
-    rec = rdr.next() # read attributes names
+    rec = next(rdr) # read attributes names
 
     attributes = []
     for attr in rec:
         attributes.append(str(attr).strip())
     
-    rdr.next() # empty line
+    next(rdr) # empty line
     
     table = []
     for rec in rdr:
@@ -213,19 +213,19 @@ def uread_mv_txt(path):
     """
     input_file = open(path, "rb")
     rdr = csv.reader(input_file, delimiter="\t")
-    rec = rdr.next() # read objects names
+    rec = next(rdr) # read objects names
     
     objects = []
     for obj in rec:
-        objects.append(unicode(obj, "utf-8").strip())
+        objects.append(str(obj, "utf-8").strip())
     
-    rec = rdr.next() # read attributes names
+    rec = next(rdr) # read attributes names
 
     attributes = []
     for attr in rec:
-        attributes.append(unicode(attr, "utf-8").strip())
+        attributes.append(str(attr, "utf-8").strip())
     
-    rdr.next() # empty line
+    next(rdr) # empty line
     
     table = []
     for rec in rdr:
@@ -255,7 +255,7 @@ def write_mv_txt(context, path):
     output_file.write("\t".join(context.attributes))
     output_file.write("\n\n")
 
-    for i in xrange(len(context.objects)):
+    for i in range(len(context.objects)):
         output_file.write("\t".join([str(spam) for spam in context[i]]))
         output_file.write("\n")
 
@@ -270,7 +270,7 @@ def uwrite_mv_txt(context, path):
     output_file.write("\t".join(context.attributes).encode("utf-8"))
     output_file.write("\n\n")
 
-    for i in xrange(len(context.objects)):
+    for i in range(len(context.objects)):
         output_file.write("\t".join([str(spam) for spam in context[i]]))
         output_file.write("\n")
 

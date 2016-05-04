@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Holds ConceptSystem class"""
 
-from concept import Concept
+from .concept import Concept
 #from algorithms import compute_covering_relation
 
 class ConceptSystem(object):
@@ -60,7 +60,7 @@ class ConceptSystem(object):
     def __str__(self):
         s = ""
         for c in self._concepts:
-            s = s + "%s\n" % str(c)
+            s += "%s\n" % str(c)
         return s[:-1]
 
     def index(self, concept):
@@ -91,13 +91,12 @@ class ConceptSystem(object):
         cs = self
         parents = dict([(c, set()) for c in cs])
 
-        for i in xrange(len(cs)):
-            for j in xrange(len(cs)):
+        for i in range(len(cs)):
+            for j in range(len(cs)):
                 if cs[i].intent < cs[j].intent:
                     parents[cs[j]].add(cs[i])
-                    for k in xrange(len(cs)):
-                        if cs[i].intent < cs[k].intent and\
-                           cs[k].intent < cs[j].intent:
+                    for k in range(len(cs)):
+                        if cs[i].intent < cs[k].intent < cs[j].intent:
                                 parents[cs[j]].remove(cs[i])
                                 break
         return parents

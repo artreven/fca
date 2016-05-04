@@ -9,10 +9,10 @@ from fca import Implication
 
 class ExplorationTest(unittest.TestCase):
     def setUp(self):
-        table = [[True, False, False, True],\
-            [True, False, True, False],\
-            [False, True, True, False],\
-            [False, True, True, True]]
+        table = [[True, False, False, True],
+                 [True, False, True, False],
+                 [False, True, True, False],
+                 [False, True, True, True]]
         objs = ['1', '2', '3', '4']
         attrs = ['a', 'b', 'c', 'd']
         cxt = expl.ExplorationContext(fca.Context(table, objs, attrs))

@@ -1,15 +1,15 @@
-'''
+"""
 Holds functions for finding optimal factors for decomposition of context.
 
 Created on Jan 8, 2014
 
 @author: artreven
-'''
+"""
 import itertools
 import collections
 
 import fca
-import closure_operators as co
+from . import closure_operators as co
 
 def make_factor_cxts(factors=[]):
     """
@@ -34,13 +34,13 @@ def make_factor_cxts(factors=[]):
         table_objs_fcts.append(set(el_ind(obj, objs_dict) for obj in c.extent))
         table_fcts_atts.append(set(el_ind(att, atts_dict) for att in c.intent))
     # sort objs and atts in order of appearance to get correct factor ex/intents
-    attributes = sorted(atts_dict.keys(), key=atts_dict.__getitem__)
-    objects = sorted(objs_dict.keys(), key=objs_dict.__getitem__)
+    attributes = sorted(list(atts_dict.keys()), key=atts_dict.__getitem__)
+    objects = sorted(list(objs_dict.keys()), key=objs_dict.__getitem__)
     num_atts = len(attributes)
     num_objs = len(objects)
-    names_fcts = map(lambda x: 'f{}'.format(x), range(len(factors)))
-    table_objs_fcts = zip(*[[(x in row) for x in range(num_objs)]
-                            for row in table_objs_fcts])
+    names_fcts = ['f{}'.format(x) for x in range(len(factors))]
+    table_objs_fcts = list(zip(*[[(x in row) for x in range(num_objs)]
+                            for row in table_objs_fcts]))
     table_fcts_atts = [[(x in row) for x in range(num_atts)]
                        for row in table_fcts_atts]
     return (fca.Context(table_objs_fcts, objects, names_fcts),
@@ -79,10 +79,9 @@ def algorithm2(cxt):
                 maxDj = max(ls_measures, key=lambda x: x[0])
             else:
                 maxDj = [0,]
-            #print ls_measures, D, V
             if maxDj[0] > V:
                 j = maxDj[1]
-                D = set(co.aclosure(D | set((j,)), cxt))
+                D = set(co.aclosure(D | {j}, cxt))
                 C = set(co.aprime(D, cxt))
                 to_remove = set(itertools.product(C, D)) & U
                 V = len(to_remove)
@@ -91,7 +90,7 @@ def algorithm2(cxt):
         F.append(fca.Concept(C, D))
         U -= to_remove
         if len(to_remove) == 0:
-            print 'Algorithm stuck, something went wrong, pairs left ', len(U)
+            print('Algorithm stuck, something went wrong, pairs left ', len(U))
             assert False
     return F
 

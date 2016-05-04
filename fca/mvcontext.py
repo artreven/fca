@@ -51,17 +51,20 @@ class ManyValuedContext(Context):
         objects - the list of objects
         attributes - the list of attributes 
         """
-        if len(table) != len(objects):
-            raise ValueError("Number of objects (=%i) and number of cross table"
-                   " rows(=%i) must agree" % (len(objects), len(table)))
-        elif (len(table) != 0) and len(table[0]) != len(attributes):
-            raise ValueError("Number of attributes (=%i) and number of cross table"
-                    " columns (=%i) must agree" % (len(attributes),
-                        len(table[0])))
-
-        self._table = table
-        self._objects = objects
-        self._attributes = attributes
+        super().__init__(cross_table=table,
+                         objects=objects,
+                         attributes=attributes)
+        # if len(table) != len(objects):
+        #     raise ValueError("Number of objects (=%i) and number of cross table"
+        #            " rows(=%i) must agree" % (len(objects), len(table)))
+        # elif (len(table) != 0) and len(table[0]) != len(attributes):
+        #     raise ValueError("Number of attributes (=%i) and number of cross table"
+        #             " columns (=%i) must agree" % (len(attributes),
+        #                 len(table[0])))
+        #
+        # self._table = table
+        # self._objects = objects
+        # self._attributes = attributes
 
     def get_objects(self):
         return self._objects

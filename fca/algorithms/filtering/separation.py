@@ -3,7 +3,7 @@ Created on 12.02.2010
 
 @author: jupp
 """
-from __future__ import division
+
 
 def compute_separation_index(lattice):
     context = lattice.context
@@ -30,13 +30,13 @@ def compute_separation_index(lattice):
 if __name__ == '__main__':
     from fca import ConceptLattice, Context
     
-    ct = [[True, False, False, True],\
-          [True, False, True, False],\
-          [False, True, True, False],\
+    ct = [[True, False, False, True],
+          [True, False, True, False],
+          [False, True, True, False],
           [False, True, True, True]]
     objs = [1, 2, 3, 4]
     attrs = ['a', 'b', 'c', 'd']
     c = Context(ct, objs, attrs)
     cl = ConceptLattice(c)
     ci = compute_separation_index(cl)
-    print ci
+    print(ci)

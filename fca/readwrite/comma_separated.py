@@ -41,7 +41,7 @@ def read_mv_csv(path):
     
     objects = []
     
-    rec = rdr.next() # read attributes names
+    rec = next(rdr) # read attributes names
 
     attributes = []
     for attr in rec:

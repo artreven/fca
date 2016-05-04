@@ -3,6 +3,7 @@
 
 from collections import defaultdict
 import copy
+from functools import reduce
 
 def oprime(objects, context):
     """
@@ -149,7 +150,7 @@ def lin_closure(s, implications):
         m = update.pop()
         current_imps = imps[m]
         add = reduce(set.union,
-                     map(decrease_count, range(len(current_imps))),
+                     list(map(decrease_count, list(range(len(current_imps))))),
                      set()) - new_closure
         new_closure |= add
         update.extend(add)
@@ -168,7 +169,7 @@ def closure(current, base_set, implications, prefLen):
     
     while (old_closure != new_closure):
         old_closure = copy.copy(new_closure)
-        delete_list = [];
+        delete_list = []
         
         for imp in unused_imps:
             if imp.get_premise() <= new_closure:

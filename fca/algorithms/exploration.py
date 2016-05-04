@@ -218,15 +218,15 @@ class BasicExploration(object):
             self.recompute_basis()
 
 if __name__ == "__main__":    
-    table = [[True, False, False, True],\
-             [True, False, True, False],\
-             [False, True, True, False],\
+    table = [[True, False, False, True],
+             [True, False, True, False],
+             [False, True, True, False],
              [False, True, True, True]]
     objs = ['1', '2', '3', '4']
     attrs = ['a', 'b', 'c', 'd']
     cxt = fca.Context(table, objs, attrs)
     exp = BasicExploration(cxt)
-    print exp
+    print(exp)
     exp.confirm_object_implication(1)
-    exp.counter_example_for_obj_implication('test', set(['3']), 0)
-    print exp
+    exp.counter_example_for_obj_implication('test', {'3'}, 0)
+    print(exp)

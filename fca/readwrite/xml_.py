@@ -25,66 +25,64 @@ def write_xml(path, cs):
     objects = list(objects)
     attributes = list(attributes)
     
-    objects_ids = dict([(objects[i], u"o{0}".format(i+1))  for i in xrange(len(objects))])
-    attributes_ids = dict([(attributes[i], u"a{0}".format(i+1))  for i in xrange(len(attributes))])
-    
-    out = file(path, "wb")
+    objects_ids = dict([(objects[i], "o{0}".format(i+1))  for i in range(len(objects))])
+    attributes_ids = dict([(attributes[i], "a{0}".format(i+1))  for i in range(len(attributes))])
 
-    impl = getDOMImplementation()
+    with open(path, "wb") as out:
+        impl = getDOMImplementation()
 
-    newdoc = impl.createDocument(None, u"conceptsystem", None)
-    top_element = newdoc.documentElement
-    
-    element = newdoc.createElement(u"objects")
-    for obj in objects:
-        obj_element = newdoc.createElement(u"object")
-        obj_element.setAttribute(u"id", objects_ids[obj])
-        textnode = newdoc.createTextNode(obj.encode("utf-8"))
-        obj_element.appendChild(textnode)
-        element.appendChild(obj_element)
-    top_element.appendChild(element)
-    
-    element = newdoc.createElement(u"attributes")
-    for attr in attributes:
-        attr_element = newdoc.createElement(u"attribute")
-        attr_element.setAttribute(u"id", attributes_ids[attr])
-        textnode = newdoc.createTextNode(attr.encode("utf-8"))
-        attr_element.appendChild(textnode)
-        element.appendChild(attr_element)
-    top_element.appendChild(element)
-    
-    element = newdoc.createElement(u"concepts")
-    for concept in cs:
-        c_element = newdoc.createElement(u"concept")
-        
-        e_element = newdoc.createElement(u"extent")
-        for obj in concept.extent:
-            obj_element = newdoc.createElement(u"object")
-            obj_element.setAttribute(u"ref", objects_ids[obj])
-            e_element.appendChild(obj_element)
-            
-        c_element.appendChild(e_element)
-        
-        i_element = newdoc.createElement(u"intent")
-        for attr in concept.intent:
-            attr_element = newdoc.createElement(u"attribute")
-            attr_element.setAttribute(u"ref", attributes_ids[attr])
-            i_element.appendChild(attr_element)
-            
-        c_element.appendChild(i_element)
-            
-        m_element = newdoc.createElement(u"meta")
-        for key in concept.meta.keys():
-            m_element.setAttribute(unicode(key.replace(" ", "_")), unicode(concept.meta[key]))
-            
-        c_element.appendChild(m_element)
-        
-        element.appendChild(c_element)
-        
-    top_element.appendChild(element)
-    
-    newdoc.writexml(out, indent="\n", addindent="\t", encoding="UTF-8")
-    out.close()
+        newdoc = impl.createDocument(None, "conceptsystem", None)
+        top_element = newdoc.documentElement
+
+        element = newdoc.createElement("objects")
+        for obj in objects:
+            obj_element = newdoc.createElement("object")
+            obj_element.setAttribute("id", objects_ids[obj])
+            textnode = newdoc.createTextNode(obj.encode("utf-8"))
+            obj_element.appendChild(textnode)
+            element.appendChild(obj_element)
+        top_element.appendChild(element)
+
+        element = newdoc.createElement("attributes")
+        for attr in attributes:
+            attr_element = newdoc.createElement("attribute")
+            attr_element.setAttribute("id", attributes_ids[attr])
+            textnode = newdoc.createTextNode(attr.encode("utf-8"))
+            attr_element.appendChild(textnode)
+            element.appendChild(attr_element)
+        top_element.appendChild(element)
+
+        element = newdoc.createElement("concepts")
+        for concept in cs:
+            c_element = newdoc.createElement("concept")
+
+            e_element = newdoc.createElement("extent")
+            for obj in concept.extent:
+                obj_element = newdoc.createElement("object")
+                obj_element.setAttribute("ref", objects_ids[obj])
+                e_element.appendChild(obj_element)
+
+            c_element.appendChild(e_element)
+
+            i_element = newdoc.createElement("intent")
+            for attr in concept.intent:
+                attr_element = newdoc.createElement("attribute")
+                attr_element.setAttribute("ref", attributes_ids[attr])
+                i_element.appendChild(attr_element)
+
+            c_element.appendChild(i_element)
+
+            m_element = newdoc.createElement("meta")
+            for key in list(concept.meta.keys()):
+                m_element.setAttribute(str(key.replace(" ", "_")), str(concept.meta[key]))
+
+            c_element.appendChild(m_element)
+
+            element.appendChild(c_element)
+
+        top_element.appendChild(element)
+
+        newdoc.writexml(out, indent="\n", addindent="\t", encoding="UTF-8")
 
 
 def read_xml(path):
@@ -123,19 +121,19 @@ def read_xml(path):
         global new_obj, new_attr, buffer
         global new_extent, new_intent, new_meta
         if name == "object":
-            if "id" in attrs.keys():
+            if "id" in list(attrs.keys()):
                 buffer = ""
                 new_obj = attrs["id"]
-            elif "ref" in attrs.keys():
+            elif "ref" in list(attrs.keys()):
                 new_extent.append(d_objects[attrs["ref"]])
         elif name == "attribute":
-            if "id" in attrs.keys():
+            if "id" in list(attrs.keys()):
                 buffer = ""
                 new_attr = attrs["id"]
-            elif "ref" in attrs.keys():
+            elif "ref" in list(attrs.keys()):
                 new_intent.append(d_attributes[attrs["ref"]])
         elif name == "meta":
-            for key in attrs.keys():
+            for key in list(attrs.keys()):
                 new_meta[str(key).replace("_", " ")] = float(attrs[key])
         elif name == "concept":
             new_intent = []
@@ -208,19 +206,19 @@ def uread_xml(path):
         global new_obj, new_attr, buffer
         global new_extent, new_intent, new_meta
         if name == "object":
-            if "id" in attrs.keys():
+            if "id" in list(attrs.keys()):
                 buffer = ""
                 new_obj = attrs["id"]
-            elif "ref" in attrs.keys():
+            elif "ref" in list(attrs.keys()):
                 new_extent.append(d_objects[attrs["ref"]])
         elif name == "attribute":
-            if "id" in attrs.keys():
+            if "id" in list(attrs.keys()):
                 buffer = ""
                 new_attr = attrs["id"]
-            elif "ref" in attrs.keys():
+            elif "ref" in list(attrs.keys()):
                 new_intent.append(d_attributes[attrs["ref"]])
         elif name == "meta":
-            for key in attrs.keys():
+            for key in list(attrs.keys()):
                 new_meta[str(key).replace("_", " ")] = float(attrs[key])
         elif name == "concept":
             new_intent = []

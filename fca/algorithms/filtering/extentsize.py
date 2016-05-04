@@ -1,4 +1,4 @@
-from __future__ import division
+
 
 def compute_extent_size(lattice):
     number_of_objects = len(lattice.context.objects)

@@ -1,10 +1,10 @@
 """Module provides filtering capabilities"""
-from filter import (filter_concepts, compute_index)
-from probability import compute_probability
-from separation import compute_separation_index
-from stability import (compute_estability, compute_istability)
-from extentsize import compute_extent_size
-from intentsize import compute_intent_size
+from .filter import (filter_concepts, compute_index)
+from .probability import compute_probability
+from .separation import compute_separation_index
+from .stability import (compute_estability, compute_istability)
+from .extentsize import compute_extent_size
+from .intentsize import compute_intent_size
 
 def get_compute_functions():
     functions = {"Probability index" : compute_probability,

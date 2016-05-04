@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import unittest
-import closure_operators
+from fca.algorithms import closure_operators
 import fca
 from fca import compute_dg_basis
 from fca.implication import Implication
@@ -37,36 +37,56 @@ class BasisTest(unittest.TestCase):
 class AirlinesTest(BasisTest):
     def test_attribute_implications(self):
         self.attribute_implications = [
-            Implication(set([ 'Carribean', ]),set([ 'United States', 'Carribean', 'Latin America', ])),
-            Implication(set([ 'Mexico', ]),set([ 'United States', 'Latin America', 'Mexico', ])),
-            Implication(set([ 'Africa', ]),set([ 'Europe', 'United States', 'Asia Pasific', 'Africa', ])),
-            Implication(set([ 'Middle East', ]),set([ 'Canada', 'Europe', 'Asia Pasific', 'United States', 'Middle East', ])),
-            Implication(set([ 'United States', 'Asia Pasific', ]),set([ 'Europe', 'United States', 'Asia Pasific', ])),
-            Implication(set([ 'Canada', ]),set([ 'Canada', 'United States', ])),
-            Implication(set([ 'Europe', 'United States', ]),set([ 'Europe', 'United States', 'Asia Pasific', ])),
-            Implication(set([ 'Europe', 'Asia Pasific', ]),set([ 'Europe', 'United States', 'Asia Pasific', ])),
-            Implication(set([ 'Canada', 'Europe', 'Asia Pasific', 'Africa', 'United States', ]),set([ 'Canada', 'Europe', 'Asia Pasific', 'Africa', 'United States', 'Middle East', ])),
-            Implication(set([ 'Latin America', ]),set([ 'United States', 'Latin America', ])),
-            Implication(set([ 'United States', 'Carribean', 'Latin America', 'Mexico', ]),set([ 'Canada', 'United States', 'Carribean', 'Latin America', 'Mexico', ])),
-            Implication(set([ 'Canada', 'United States', 'Latin America', ]),set([ 'Canada', 'United States', 'Latin America', 'Mexico', ])),
-            Implication(set([ 'Europe', 'Asia Pasific', 'Africa', 'United States', 'Carribean', 'Latin America', ]),set([ 'Canada', 'Europe', 'Asia Pasific', 'Mexico', 'Africa', 'United States', 'Middle East', 'Carribean', 'Latin America', ])),
+            Implication({'Carribean'},
+                        {'United States', 'Carribean', 'Latin America'}),
+            Implication({'Mexico'},
+                        {'United States', 'Latin America', 'Mexico'}),
+            Implication({'Africa'},
+                        {'Europe', 'United States', 'Asia Pasific', 'Africa'}),
+            Implication({'Middle East'},
+                        {'Canada', 'Europe', 'Asia Pasific', 'United States',
+                         'Middle East'}),
+            Implication({'United States', 'Asia Pasific'},
+                        {'Europe', 'United States', 'Asia Pasific'}),
+            Implication({'Canada'}, {'Canada', 'United States'}),
+            Implication({'Europe', 'United States'},
+                        {'Europe', 'United States', 'Asia Pasific'}),
+            Implication({'Europe', 'Asia Pasific'},
+                        {'Europe', 'United States', 'Asia Pasific'}),
+            Implication(
+                {'Canada', 'Europe', 'Asia Pasific', 'Africa', 'United States'},
+                {'Canada', 'Europe', 'Asia Pasific', 'Africa',
+                         'United States', 'Middle East'}),
+            Implication({'Latin America'},
+                        {'United States', 'Latin America'}),
+            Implication(
+                {'United States', 'Carribean', 'Latin America', 'Mexico'},
+                {'Canada', 'United States', 'Carribean',
+                         'Latin America', 'Mexico'}),
+            Implication({'Canada', 'United States', 'Latin America'},
+                        {'Canada', 'United States', 'Latin America', 'Mexico'}),
+            Implication({'Europe', 'Asia Pasific', 'Africa', 'United States',
+                         'Carribean', 'Latin America'},
+                        {'Canada', 'Europe', 'Asia Pasific', 'Mexico', 'Africa',
+                         'United States', 'Middle East', 'Carribean',
+                         'Latin America'}),
         ]
         
         imp_basis = compute_dg_basis(self.cxt)
         self.assertEqual(len(imp_basis), len(self.attribute_implications))
         for imp in self.attribute_implications:
-	        self.assertTrue(imp in imp_basis)
+            self.assertTrue(imp in imp_basis)
 	        
 class RelativeBasisTest(unittest.TestCase):
     def setUp(self):
-        ct = [[True, False, False, True],\
-              [True, False, True, False],\
-              [False, True, True, False],\
+        ct = [[True, False, False, True],
+              [True, False, True, False],
+              [False, True, True, False],
               [False, True, True, True]]
         objs = ['1', '2', '3', '4']
         attrs = ['a', 'b', 'c', 'd']
         self.cxt = fca.Context(ct, objs, attrs)
-        self.basis = [Implication(set(['c', 'd']), set(['b']))]
+        self.basis = [Implication({'c', 'd'}, {'b'})]
     
     def test_relative_basis(self):
         simple_basis = compute_dg_basis(self.cxt)
@@ -78,16 +98,16 @@ class RelativeBasisTest(unittest.TestCase):
 
 class BasisTest2(unittest.TestCase):
     def setUp(self):
-        ct = [[True, True, True, True],\
-              [True, False, True, False],\
-              [False, True, True, False],\
+        ct = [[True, True, True, True],
+              [True, False, True, False],
+              [False, True, True, False],
               [False, True, True, True]]
         objs = ['1', '2', '3', '4']
         attrs = ['a', 'b', 'c', 'd']
         self.cxt = fca.Context(ct, objs, attrs)
     
     def test_relative_basis(self):
-        imp_basis=[Implication(set(), set(['c']))]
+        imp_basis=[Implication(set(), {'c'})]
         relative_basis = compute_dg_basis(self.cxt, imp_basis=imp_basis)
         self.assertFalse(imp_basis[0] in relative_basis)
 
@@ -107,4 +127,4 @@ class BasisTest2(unittest.TestCase):
 
 
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()
