@@ -32,7 +32,7 @@ class ConceptLattice(object):
 
     """
     def __init__(self, context, builder=norris):
-        (self._concepts, self._parents) = norris(context)
+        (self._concepts, self._parents) = builder(context)
         self._bottom_concept = [c for c in self._concepts if not self.ideal(c)][0]
         self._top_concept = [c for c in self._concepts if not self.filter(c)][0]
         self._context = context

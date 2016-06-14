@@ -45,13 +45,15 @@ def make_factor_cxts(factors=[]):
                        for row in table_fcts_atts]
     return (fca.Context(table_objs_fcts, objects, names_fcts),
             fca.Context(table_fcts_atts, names_fcts, attributes))
-    
+
+
 def _oplus(D, y, cxt, U):
-    Dplusy = D | set((y,))
+    Dplusy = D | {y}
     pr = set(itertools.product(co.aprime(Dplusy, cxt),
                                co.aclosure(Dplusy, cxt)))
     result = pr & U
     return result
+
 
 def algorithm2(cxt):
     """
@@ -93,9 +95,3 @@ def algorithm2(cxt):
             print('Algorithm stuck, something went wrong, pairs left ', len(U))
             assert False
     return F
-
-if __name__ == '__main__':
-    import cProfile
-    spect_cxt_path = '/home/artreven/Dropbox/personal/Scripts/AptanaWorkspace/MIW/error_check/data_sets/SPECT/SPECT_cxt.txt'
-    spect_cxt = fca.read_txt(spect_cxt_path).reduce_objects()
-    cProfile.run('algorithm2(spect_cxt)')

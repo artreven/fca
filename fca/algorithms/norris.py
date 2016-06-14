@@ -5,7 +5,7 @@ from copy import copy
 from fca import Concept, ConceptSystem
 
 
-def norris(context):
+def norris(context, with_parents=True):
     """Build all concepts of a context
     
     Based on the Norris' algorithm for computing the maximal rectangles
@@ -46,7 +46,6 @@ def norris(context):
     
     cs = [Concept([], context.attributes)]
     for i in range(len(context)):
-        # TODO:
         cs_for_loop = cs[:]
         for c in cs_for_loop:
             if c.intent.issubset(examples[i]):
@@ -62,32 +61,29 @@ def norris(context):
                 if new:
                     cs.append(Concept({context.objects[i]} | c.extent,
                         new_intent))
-    return (cs, compute_covering_relation(cs))
+    if with_parents:
+        return (cs, compute_covering_relation(cs))
+    else:
+        return cs
 
 
 def compute_covering_relation(cs):
-        """Computes covering relation for a given concept system.
+    """Computes covering relation for a given concept system.
 
-        Returns a dictionary containing sets of parents for each concept.
+    Returns a dictionary containing sets of parents for each concept.
 
-        Examples
-        ========
+    Examples
+    ========
 
-        """
-        parents = dict([(c, set()) for c in cs])
+    """
+    parents = dict([(c, set()) for c in cs])
 
-        for i in range(len(cs)):
-            for j in range(len(cs)):
-                if cs[i].intent < cs[j].intent:
-                    parents[cs[j]].add(cs[i])
-                    for k in range(len(cs)):
-                        if cs[i].intent < cs[k].intent < cs[j].intent:
-                                parents[cs[j]].remove(cs[i])
-                                break
-        return parents
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
-    
+    for i in range(len(cs)):
+        for j in range(len(cs)):
+            if cs[i].intent < cs[j].intent:
+                parents[cs[j]].add(cs[i])
+                for k in range(len(cs)):
+                    if cs[i].intent < cs[k].intent < cs[j].intent:
+                        parents[cs[j]].remove(cs[i])
+                        break
+    return parents

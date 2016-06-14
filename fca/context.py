@@ -240,15 +240,12 @@ class Context(object):
                        self.attributes[:])
         
     def get_concept_lattice(self):
-        # TODO: put _cl in init. What happens if context is modified?
-        if not hasattr(self, '_cl'):
-            self._cl = fca.ConceptLattice(self)
-        return self._cl
+        return fca.ConceptLattice(self)
     
     concept_lattice = property(get_concept_lattice)
     
     def get_concepts(self):
-        return self.concept_lattice.concepts
+        return fca.algorithms.norris(self, False)
         
     concepts = property(get_concepts)
         
@@ -478,16 +475,13 @@ class Context(object):
                        attribute_names)
         
     def get_object_attribute_pairs(self):
-        # TODO: add _pairs to init or delete the method
-        if not hasattr(self, '_pairs'):
-            num_objs = len(self.objects)
-            num_atts = len(self.attributes)
-            pairs = [(self.objects[i], self.attributes[j])
-                     for i in range(num_objs)
-                     for j in range(num_atts)
-                     if self.table[i][j] == 1]
-            self._pairs = pairs
-        return self._pairs
+        num_objs = len(self.objects)
+        num_atts = len(self.attributes)
+        pairs = [(self.objects[i], self.attributes[j])
+                 for i in range(num_objs)
+                 for j in range(num_atts)
+                 if self.table[i][j] == 1]
+        return pairs
     
     object_attribute_pairs = property(get_object_attribute_pairs)
     
@@ -726,6 +720,7 @@ class Context(object):
                        self.objects,
                        self.attributes + complementary_cxt.attributes)
 
+
 def list2int(lst):
     """
     input lst - list of 1 and 0. Treat as binary number, make it decimal integer
@@ -733,7 +728,8 @@ def list2int(lst):
     def foo(x, y):
         return (x << 1) + y
     return reduce(foo, reversed(lst), 0)
-    
+
+
 def make_random_context(num_obj, num_att, d):
     """
     Make random context, useful for testing.
