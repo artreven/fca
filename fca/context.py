@@ -315,23 +315,17 @@ class Context(object):
         index = self.object_indices[o]
         return self.get_object_intent_by_index(index)
     
-    def get_attribute_extent_by_index_old(self, j):
-        """Return a set of corresponding objects for column with index i"""
-        objs_indexes = [i for i in range(len(self.table)) if self.table[i][j]]
-        return set([self.objects[i] for i in objs_indexes])
-    
     def get_attribute_extent_by_index(self, j):
         """
         Return a set of corresponding objects for column with index i.
-        @note: refactored by Artem Revenko to increase performance. 
         """
-        objects = [self.objects[i]
-                   for i in range(len(self.objects))
-                   if self.table[i][j]]
-        return set(objects)
+        att_col = self.np_table[:, j]
+        obj_inds = att_col.nonzero()[0]
+        objs = [self.objects[j] for j in obj_inds]
+        return set(objs)
     
     def get_attribute_extent(self, a):
-        index = self.attributes.index(a)
+        index = self.attribute_indices[a]
         return self.get_attribute_extent_by_index(index)
         
     def get_value(self, o, a):
