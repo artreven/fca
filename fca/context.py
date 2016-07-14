@@ -221,6 +221,10 @@ class Context(object):
         self._table = cross_table
         self._objects = _objects
         self._attributes = _attributes
+        self.np_table = np.array(cross_table, dtype=bool)
+        self.object_indices = {obj: ind for ind, obj in enumerate(objects)}
+        self.attribute_indices = {att: ind
+                                  for ind, att in enumerate(attributes)}
         
     def get_table(self):
         return self._table
@@ -298,23 +302,17 @@ class Context(object):
     def intents(self):
         return self.examples()
     
-    def get_object_intent_by_index_old(self, i):
-        """Return a set of corresponding attributes for row with index i"""
-        attrs_indexes = [j for j in range(len(self.table[i])) if self.table[i][j]]
-        return set([self.attributes[i] for i in attrs_indexes])
-    
     def get_object_intent_by_index(self, i):
         """
         Return a set of corresponding attributes for row with index i.
-        @note: refactored by Artem Revenko to increase performance.  
         """
-        atts = [self.attributes[j]
-                for j in range(len(self.attributes))
-                if self.table[i][j]]
+        obj_row = self.np_table[i, :]
+        att_inds = obj_row.nonzero()[0]
+        atts = [self.attributes[j] for j in att_inds]
         return set(atts)
     
     def get_object_intent(self, o):
-        index = self.objects.index(o)
+        index = self.object_indices[o]
         return self.get_object_intent_by_index(index)
     
     def get_attribute_extent_by_index_old(self, j):
@@ -340,38 +338,19 @@ class Context(object):
         io = self.objects.index(o)
         ia = self.attributes.index(a)
         return self[io][ia]
-    
-    @objects_attributes_change
+
     def add_attribute(self, col, attr_name):
         """Add new attribute to context with given name"""
-        for i in range(len(self.objects)):
-            self.table[i].append(col[i])
-        self.attributes.append(attr_name)
-        if self.attributes.count(attr_name) > 1:
-            indices = [i for i, x in enumerate(self.attributes) if x == attr_name]
-            for i in indices:
-                self.attributes[i] = str(attr_name) + '_{}'.format(i)
-            message =  "Not unique name of attribute '{}', ".format(attr_name)
-            message += "renamed to '{}_n', n \in {}".format(attr_name, indices)
-            print(message)
+        # not optimised: not expected to be a usual operation
+        new_table = np.c_[self.np_table, col].tolist()
+        new_attributes = self.attributes + [attr_name]
+        self.__init__(new_table, self.objects, new_attributes)
 
-    def add_column(self, col, attr_name):
-        """Deprecated. Use add_attribute."""
-        print("Deprecated. Use add_attribute.")
-        self.add_attribute(col, attr_name)
-
-    @objects_attributes_change
     def add_object(self, row, obj_name):
         """Add new object to context with given name"""
-        self.table.append(row)
-        self.objects.append(obj_name)
-        if self.objects.count(obj_name) > 1:
-            indices = [i for i, x in enumerate(self.objects) if x == obj_name]
-            for i in indices:
-                self.objects[i] = str(obj_name) + '_{}'.format(i)
-            message =  "Not unique name of object '{}', ".format(obj_name)
-            message += "renamed to '{}_n', n \in {}".format(obj_name, indices)
-            raise Exception(message)
+        new_table = self.table + [row]
+        new_objects = self.objects + [obj_name]
+        self.__init__(new_table, new_objects, self.attributes)
         
     def add_object_with_intent(self, intent, obj_name):
         row = [(attr in intent) for attr in self.attributes]
@@ -380,43 +359,42 @@ class Context(object):
     def add_attribute_with_extent(self, extent, attr_name):
         col = [(obj in extent) for obj in self.objects]
         self.add_attribute(col, attr_name)
-        
-    @objects_attributes_change
+
     def set_attribute_extent(self, extent, name):
-        attr_index = self.attributes.index(name)
-        for i in range(len(self.objects)):
-            self.table[i][attr_index] = (self.objects[i] in extent)
-            
-    @objects_attributes_change
+        new_column = [False]*len(self.objects)
+        for i in [self.object_indices[x] for x in extent]:
+            new_column[i] = True
+        self.np_table[:, self.attribute_indices[name]] = new_column
+        new_table = self.np_table.tolist()
+        self.__init__(new_table, self.objects, self.attributes)
+
     def set_object_intent(self, intent, name):
-        obj_index = self.objects.index(name)
-        for i in range(len(self.attributes)):
-            self.table[obj_index][i] = (self.attributes[i] in intent)
-        
-    @objects_attributes_change
-    def delete_object(self, obj_index):
+        new_row = [False]*len(self.objects)
+        for i in [self.attribute_indices[x] for x in intent]:
+            new_row[i] = True
+        self.table[self.object_indices[name]] = new_row
+        self.__init__(self.table, self.objects, self.attributes)
+
+    def delete_object(self, name):
+        obj_index = self.object_indices[name]
         del self.table[obj_index]
         del self.objects[obj_index]
-        
-    def delete_object_by_name(self, obj_name):
-        self.delete_object(self.objects.index(obj_name))
-    
-    @objects_attributes_change
-    def delete_attribute(self, attr_index):
-        for i in range(len(self.objects)):
-            del self.table[i][attr_index]
-        del self.attributes[attr_index]
-        
-    def delete_attribute_by_name(self, attr_name):
-        self.delete_attribute(self.attributes.index(attr_name))
-        
-    @objects_attributes_change
+        self.__init__(self.table, self.objects, self.attributes)
+
+    def delete_attribute(self, name):
+        att_index = self.attribute_indices[name]
+        self.np_table = np.delete(self.np_table, att_index, 1)
+        new_table = self.np_table.tolist()
+        del self.attributes[att_index]
+        self.__init__(new_table, self.objects, self.attributes)
+
     def rename_object(self, old_name, name):
-        self.objects[self.objects.index(old_name)] = name
-        
-    @objects_attributes_change
+        self.objects[self.object_indices[old_name]] = name
+        self.__init__(self.table, self.objects, self.attributes)
+
     def rename_attribute(self, old_name, name):
-        self.attributes[self.attributes.index(old_name)] = name
+        self.attributes[self.attribute_indices[old_name]] = name
+        self.__init__(self.table, self.objects, self.attributes)
         
     def oprime_future(self, obj_inds):
         """
@@ -492,7 +470,7 @@ class Context(object):
                 to_delete.append(self.objects[i])
         if to_delete:
             for i in to_delete:
-                self.delete_object_by_name(i)
+                self.delete_object(i)
         return self
 
     def _extract_subtable(self, attribute_names):
@@ -752,3 +730,11 @@ if __name__ == "__main__":
     doctest.testmod()
     
     """
+    import cProfile
+    N = 20
+    r_cxts = [make_random_context(2000, 30, .3) for _ in range(N)]
+
+    def get_obj_intents(r_cxt):
+        for obj in r_cxt.objects:
+            r_cxt.get_object_intent(obj)
+    cProfile.run('for r_cxt in r_cxts: get_obj_intents(r_cxt)')

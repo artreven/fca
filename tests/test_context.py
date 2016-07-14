@@ -29,11 +29,11 @@ class Test:
         self.cxt_random.add_attribute([1] * self.objs_num, 'new_att')
         assert 'new_att' in self.cxt_random.get_object_intent_by_index(0)
         
-        self.cxt_random.set_attribute_extent([0] * self.objs_num, 'new_att')
+        self.cxt_random.set_attribute_extent(set(), 'new_att')
         assert not 'new_att' in self.cxt_random.get_object_intent_by_index(0)
         
-        self.cxt_random.set_attribute_extent([1] * self.objs_num, 'new_att')
-        self.cxt_random.delete_attribute_by_name('new_att')
+        self.cxt_random.set_attribute_extent(self.cxt_random.objects, 'new_att')
+        self.cxt_random.delete_attribute('new_att')
         assert not 'new_att' in self.cxt_random.get_object_intent_by_index(0)
         
         self.cxt_random.add_attribute([1] * self.objs_num, 'new_att')
@@ -46,11 +46,11 @@ class Test:
         self.cxt_random.add_object([1] * self.atts_num, 'new_obj')
         assert 'new_obj' in self.cxt_random.get_attribute_extent_by_index(0)
         
-        self.cxt_random.set_object_intent([0] * self.atts_num, 'new_obj')
+        self.cxt_random.set_object_intent([], 'new_obj')
         assert not 'new_obj' in self.cxt_random.get_attribute_extent_by_index(0)
         
-        self.cxt_random.set_object_intent([1] * self.atts_num, 'new_obj')
-        self.cxt_random.delete_object_by_name('new_obj')
+        self.cxt_random.set_object_intent(self.cxt_random.attributes, 'new_obj')
+        self.cxt_random.delete_object('new_obj')
         assert not 'new_obj' in self.cxt_random.get_attribute_extent_by_index(0)
         
         self.cxt_random.add_object([1] * self.atts_num, 'new_obj')

@@ -29,6 +29,7 @@ class Concept(object):
     (['Earth', 'Mars', 'Mercury', 'Venus'], ['Near to the sun', 'Small size'])
 
     """
+    # TODO: add __eq__
     
     def __init__(self, extent, intent):
         """Initialize a concept with given extent and intent """
