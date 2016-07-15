@@ -60,6 +60,14 @@ class Concept(object):
     def __repr__(self):
         return self.__str__()
 
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.extent == other.extent and
+                self.intent == other.intent)
+
+    def __hash__(self):
+        return hash(str(self))
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

@@ -9,7 +9,6 @@ import itertools
 import collections
 
 import fca
-from . import closure_operators as co
 
 def make_factor_cxts(factors=[]):
     """
@@ -49,13 +48,14 @@ def make_factor_cxts(factors=[]):
 
 def _oplus(D, y, cxt, U):
     Dplusy = D | {y}
-    pr = set(itertools.product(co.aprime(Dplusy, cxt),
-                               co.aclosure(Dplusy, cxt)))
+    Dplusy_prime = cxt.aprime(Dplusy)
+    pr = set(itertools.product(Dplusy_prime,
+                               cxt.oprime(Dplusy_prime)))
     result = pr & U
     return result
 
 
-def algorithm2(cxt):
+def algorithm2(cxt, fidelity=1):
     """
     Algorithm2 from article{
     title = "Discovery of optimal factors in binary data via a novel method of matrix decomposition ",
@@ -67,31 +67,46 @@ def algorithm2(cxt):
     doi = "http://dx.doi.org/10.1016/j.jcss.2009.05.002",
     url = "http://www.sciencedirect.com/science/article/pii/S0022000009000415",
     author = "Radim Belohlavek and Vilem Vychodil"}
+
+    Extensions:
+    Fidelity of coverage - stop when fidelity level is explained by factors
     """
     U = set(cxt.object_attribute_pairs)
-    F = []
-    while U:
+    len_initial = len(U)
+    while (len_initial - len(U)) / len_initial < fidelity:
         D = set()
         V = 0
         to_remove = set()
         while True:
-            ls_measures = [(len(_oplus(D, j, cxt, U)), j)
-                           for j in set(cxt.attributes) - D]
+            ls_measures = [
+                (len(_oplus(D, j, cxt, U)), j)
+                           for j in set(cxt.attributes) - D
+                ]
             if ls_measures:
                 maxDj = max(ls_measures, key=lambda x: x[0])
             else:
                 maxDj = [0,]
             if maxDj[0] > V:
                 j = maxDj[1]
-                D = set(co.aclosure(D | {j}, cxt))
-                C = set(co.aprime(D, cxt))
+                Dj = D | {j}
+                C = cxt.aprime(Dj)
+                D = cxt.oprime(C)
                 to_remove = set(itertools.product(C, D)) & U
                 V = len(to_remove)
             else:
                 break
-        F.append(fca.Concept(C, D))
-        U -= to_remove
         if len(to_remove) == 0:
             print('Algorithm stuck, something went wrong, pairs left ', len(U))
             assert False
-    return F
+        U -= to_remove
+        yield fca.Concept(C, D), (len_initial - len(U)) / len_initial
+
+
+if __name__ == '__main__':
+    import cProfile
+    import numpy.linalg as lalg
+    r_cxt = fca.make_random_context(1200, 1000, .3)
+    # r_cxt = r_cxt.reduce_attributes().reduce_objects()
+    cProfile.run('print(lalg.svd(r_cxt.np_table))')
+    cProfile.run('for x in algorithm2(r_cxt, .3): print(len(x[0].extent), len(x[0].intent), x[1])')
+

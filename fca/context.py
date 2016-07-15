@@ -363,7 +363,7 @@ class Context(object):
         self.__init__(new_table, self.objects, self.attributes)
 
     def set_object_intent(self, intent, name):
-        new_row = [False]*len(self.objects)
+        new_row = [False]*len(self.attributes)
         for i in [self.attribute_indices[x] for x in intent]:
             new_row[i] = True
         self.table[self.object_indices[name]] = new_row
@@ -390,33 +390,59 @@ class Context(object):
         self.attributes[self.attribute_indices[old_name]] = name
         self.__init__(self.table, self.objects, self.attributes)
         
-    def oprime_future(self, obj_inds):
+    def oprime_inds(self, obj_inds):
         """
-        Compute the set of all attributes shared by objects in context. Objects
-        are input by indices.
-        
-        @note: template for future reimplementation of whole class 
+        Compute the set of all attributes shared by given objects. Objects
+        are specified by indices.
         """
-        values_intents = list(map(list2int, [self.table[i] for i in obj_inds]))
-        common_intent = reduce(operator.and_,
-                               values_intents,
-                               (1 << len(self.attributes)) - 1)
-        atts = [self.attributes[j]
-                for j in range(len(self.attributes))
-                if common_intent & (1 << j)]
-        return atts
+        try:
+            common_intent = self.np_table[obj_inds[0], :].copy()
+        except IndexError:
+            return set(range(len(self.attributes)))
+        else:
+            for obj_ind in obj_inds[1:]:
+                common_intent &= self.np_table[obj_ind, :]
+            return common_intent.nonzero()[0]
+
+    def aprime_inds(self, att_inds):
+        """
+        Compute the set of all objects shared by given attributes. Attributes
+        are specified by indices.
+        """
+        try:
+            common_extent = self.np_table[:, att_inds[0]].copy()
+        except IndexError:
+            return set(range(len(self.objects)))
+        else:
+            for att_ind in att_inds[1:]:
+                common_extent &= self.np_table[:, att_ind]
+            return common_extent.nonzero()[0]
+
+    def oclosure_inds(self, obj_inds):
+        return self.aprime_inds(self.oprime_inds(obj_inds))
+
+    def aclosure_inds(self, att_inds):
+        return self.oprime_inds(self.aprime_inds(att_inds))
     
     def oprime(self, objects):
-        return fca.algorithms.oprime(objects, self)
+        obj_inds = [self.object_indices[obj] for obj in objects]
+        att_inds = self.oprime_inds(obj_inds)
+        return set(self.attributes[i] for i in att_inds)
     
     def aprime(self, attributes):
-        return fca.algorithms.aprime(attributes, self)
+        att_inds = [self.attribute_indices[att] for att in attributes]
+        obj_inds = self.aprime_inds(att_inds)
+        return set(self.objects[i] for i in obj_inds)
     
     def oclosure(self, objects):
-        return fca.algorithms.oclosure(objects, self)
+        obj_inds = [self.object_indices[obj] for obj in objects]
+        closed_inds = self.oclosure_inds(obj_inds)
+        return set(self.objects[i] for i in closed_inds)
     
     def aclosure(self, attributes):
-        return fca.algorithms.aclosure(attributes, self)
+        att_inds = [self.attribute_indices[att] for att in attributes]
+        closed_inds = self.aclosure_inds(att_inds)
+        return set(self.attributes[i] for i in closed_inds)
         
     def transpose(self):
         """Return new context with transposed cross-table"""
@@ -724,11 +750,3 @@ if __name__ == "__main__":
     doctest.testmod()
     
     """
-    import cProfile
-    N = 20
-    r_cxts = [make_random_context(2000, 30, .3) for _ in range(N)]
-
-    def get_obj_intents(r_cxt):
-        for obj in r_cxt.objects:
-            r_cxt.get_object_intent(obj)
-    cProfile.run('for r_cxt in r_cxts: get_obj_intents(r_cxt)')

@@ -47,6 +47,7 @@ class Test:
         assert 'new_obj' in self.cxt_random.get_attribute_extent_by_index(0)
         
         self.cxt_random.set_object_intent([], 'new_obj')
+        print(self.cxt_random)
         assert not 'new_obj' in self.cxt_random.get_attribute_extent_by_index(0)
         
         self.cxt_random.set_object_intent(self.cxt_random.attributes, 'new_obj')
