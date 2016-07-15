@@ -222,9 +222,9 @@ class Context(object):
         self._objects = _objects
         self._attributes = _attributes
         self.np_table = np.array(cross_table, dtype=bool)
-        self.object_indices = {obj: ind for ind, obj in enumerate(objects)}
+        self.object_indices = {obj: ind for ind, obj in enumerate(_objects)}
         self.attribute_indices = {att: ind
-                                  for ind, att in enumerate(attributes)}
+                                  for ind, att in enumerate(_attributes)}
         
     def get_table(self):
         return self._table
