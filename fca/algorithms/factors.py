@@ -99,7 +99,7 @@ def algorithm2(cxt, fidelity=1):
             print('Algorithm stuck, something went wrong, pairs left ', len(U))
             assert False
         U -= to_remove
-        yield fca.Concept(C, D), (len_initial - len(U)) / len_initial
+        yield fca.Concept(C, D), len(to_remove) / len_initial
 
 
 if __name__ == '__main__':

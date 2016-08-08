@@ -81,9 +81,8 @@ class Implication(object):
         """Checks whether *some_set* respects an implication or not"""
         # if some_set contains every element from premise and not every
         # element from conclusion then it doesn't respect an implication
-        # TODO: refactor for partial case
         if type(some_set) == set:
-            return not self._premise <= some_set or self._conclusion <= some_set 
+            return not self.premise <= some_set or self.conclusion <= some_set
         else:
             # Assume a partial example
             return (self.conclusion <= some_set[1] or
@@ -115,6 +114,35 @@ class UnitImplication(Implication):
         return conclusion
     
     conclusion = property(get_reduced_conclusion)
+
+
+class NegativeImplication(Implication):
+    def __repr__(self):
+        try:
+            premise = ", ".join([element for element in self.premise])
+            conclusion = ("not (" +
+                          ", ".join([element for element in self.conclusion]) +
+                          ")")
+        except:
+            premise = ", ".join([str(element) for element in self.premise])
+            conclusion = ("not (" +
+                          ", ".join([str(element)
+                                     for element in self.conclusion]) +
+                          ")")
+        return " => ".join((premise, conclusion,))
+
+
+    def is_respected(self, some_set):
+        """Checks whether *some_set* respects the negative implication"""
+        # if some_set contains every element from premise and any
+        # element from conclusion then it doesn't respect an implication
+        if type(some_set) == set:
+            return (not self.premise <= some_set or
+                    not (self.conclusion & some_set))
+        else:
+            # Assume a partial example
+            return (not (self.conclusion & some_set[1]) or
+                    not self.premise <= some_set[0])
     
 if __name__ == "__main__":
     import doctest

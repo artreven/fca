@@ -16,7 +16,7 @@ def read_txt_with_names(path):
     Then tab separated 1 and 0, each line corresponds to one object.
 
     """
-    input_file = open(path, "rb")
+    input_file = open(path, "r")
     rdr = csv.reader(input_file, delimiter="\t")
     rec = next(rdr)                            # read attributes names
 
@@ -40,7 +40,7 @@ def read_txt_with_names(path):
     input_file.close()
 
     if len(attributes) != len(table[0]):
-        input_file = open(path, "rb")
+        input_file = open(path, "r")
         attributes = input_file.readline().split("\t")[:-1]
         input_file.close()
 

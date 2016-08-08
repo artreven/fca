@@ -7,7 +7,7 @@ from fca.concept_lattice import ConceptLattice
 from fca.context import Context, make_random_context
 from fca.mvcontext import ManyValuedContext
 from fca.scale import Scale
-from fca.implication import Implication, UnitImplication
+from fca.implication import Implication, UnitImplication, NegativeImplication
 
 from fca.algorithms import (norris, compute_covering_relation,
                             scale_mvcontext, compute_dg_basis, aibasis,
