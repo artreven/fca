@@ -4,7 +4,7 @@ Holds class for context
 """
 import copy
 import random
-import operator
+from collections import Counter
 
 import fca.algorithms
 
@@ -395,6 +395,8 @@ class Context(object):
         Compute the set of all attributes shared by given objects. Objects
         are specified by indices.
         """
+        if type(obj_inds) == set:
+            obj_inds = list(obj_inds)
         try:
             common_intent = self.np_table[obj_inds[0], :].copy()
         except IndexError:
@@ -409,6 +411,8 @@ class Context(object):
         Compute the set of all objects shared by given attributes. Attributes
         are specified by indices.
         """
+        if type(att_inds) == set:
+            att_inds = list(att_inds)
         try:
             common_extent = self.np_table[:, att_inds[0]].copy()
         except IndexError:
@@ -443,7 +447,43 @@ class Context(object):
         att_inds = [self.attribute_indices[att] for att in attributes]
         closed_inds = self.aclosure_inds(att_inds)
         return set(self.attributes[i] for i in closed_inds)
-        
+
+    def associative_aclosure(self, attributes):
+        att_inds = [self.attribute_indices[att] for att in attributes]
+        extent_inds = self.aprime_inds(att_inds)
+        extent_size = len(extent_inds)
+        associative_closure_inds = self.associative_oprime_inds(extent_inds)
+        associative_closure = {self.attributes[ind]: associative_closure_inds[ind]
+                               for ind in associative_closure_inds}
+        return (associative_closure, extent_size)
+
+    def associative_aprime(self, attributes):
+        att_inds = [self.attribute_indices[att] for att in attributes]
+        associative_aprime_inds = self.associative_aprime_inds(att_inds)
+        associative_aprime = {self.objects[ind]: associative_aprime_inds[ind]
+                              for ind in associative_aprime_inds}
+        return associative_aprime
+
+    def associative_oprime_inds(self, obj_inds):
+        if type(obj_inds) == set:
+            obj_inds = list(obj_inds)
+        if len(obj_inds) == 0:
+            return {att_ind: 0 for att_ind in range(len(self.attributes))}
+        all_atts_list = []
+        for obj_ind in obj_inds:
+            all_atts_list += self.np_table[obj_ind, :].nonzero()[0].tolist()
+        return Counter(all_atts_list)
+
+    def associative_aprime_inds(self, att_inds):
+        if type(att_inds) == set:
+            att_inds = list(att_inds)
+        if len(att_inds) == 0:
+            return {obj_ind: 0 for obj_ind in range(len(self.objects))}
+        all_objs_list = []
+        for att_ind in att_inds:
+            all_objs_list += self.np_table[:, att_ind].nonzero()[0].tolist()
+        return Counter(all_objs_list)
+
     def transpose(self):
         """Return new context with transposed cross-table"""
         new_objects = self.attributes[:]

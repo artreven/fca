@@ -5,6 +5,9 @@ Created on Jan 8, 2014
 
 @author: artreven
 """
+import timeit
+import cProfile
+
 import fca
 
 class Test:
@@ -98,3 +101,31 @@ class Test:
         imp = self.cxt1.get_attribute_canonical_basis()[0]
         assert str(imp) == "m1 => m3"
         assert len(self.cxt2.get_attribute_canonical_basis()) == 1
+
+    def test_compare_aclosure_associative_aclosure(self):
+        setup = '''import fca
+cxt_r = fca.make_random_context(2000, 200, 0.4)
+        '''
+
+        stmt = '''
+for att in cxt_r.attributes:
+    cxt_r.aclosure([att])
+        '''
+        cxt_r = fca.make_random_context(1000, 100, 0.4)
+        print(timeit.timeit(stmt, setup, number=10))
+        cProfile.runctx(stmt, globals(), locals())
+
+        stmt = '''
+for att in cxt_r.attributes:
+    cxt_r.associative_aclosure([att])
+        '''
+        print(timeit.timeit(stmt, setup, number=10))
+        cProfile.runctx(stmt, globals(), locals())
+
+    def test_associative_aclosure(self):
+        cxt_r = self.cxt_random
+        for att in cxt_r.attributes:
+            aclosure = cxt_r.aclosure([att])
+            a_aclosure, extent_size = cxt_r.associative_aclosure([att])
+            for att_closed in aclosure:
+                assert a_aclosure[att_closed] == extent_size

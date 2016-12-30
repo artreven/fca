@@ -55,13 +55,17 @@ class Implication(object):
         
     def __repr__(self):
         try:
-            premise = ", ".join([element for element in self._premise])
+            premise = ", ".join([element
+                                 for element in sorted(self._premise)])
             short_conclusion = self._conclusion - self._premise
-            conclusion = ", ".join([element for element in short_conclusion])
+            conclusion = ", ".join([element
+                                    for element in sorted(short_conclusion)])
         except:
-            premise = ", ".join([str(element) for element in self._premise])
+            premise = ", ".join([str(element)
+                                 for element in sorted(self._premise)])
             short_conclusion = self._conclusion - self._premise
-            conclusion = ", ".join([str(element) for element in short_conclusion])
+            conclusion = ", ".join([str(element)
+                                    for element in sorted(short_conclusion)])
         return " => ".join((premise, conclusion,))
         
     def __unicode__(self):
