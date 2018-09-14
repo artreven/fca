@@ -3,6 +3,7 @@
 Holds class for context
 """
 import copy
+import logging
 import random
 from collections import Counter
 
@@ -10,6 +11,8 @@ import fca.algorithms
 
 import numpy as np
 from functools import reduce
+
+module_logger = logging.getLogger(__name__)
 
 ####Exceptions
 class ContextException(Exception):
@@ -24,7 +27,7 @@ class NotTableException(ContextException):
         message += "\nis not convertible to lists of lists."
         return message
 
-class NotContetException(ContextException):
+class NotContextException(ContextException):
     def __str__(self):
         return "Not a context, but should be."
     
@@ -48,6 +51,19 @@ class NotUniqueElementException(ContextException):
         message += 'is already in context (object or attribute).'
         return message
 
+class IncorrectElementException(ContextException):
+    pass
+
+class IncorrectAttributeException(IncorrectElementException):
+    def __init__(self, att, cxt_atts):
+        self.att = att
+        self.cxt_atts = cxt_atts
+
+    def __str__(self):
+        out = 'Attribute {att} is not among context attributes.'.format(
+            att=self.att)
+        return out
+
 ####Decorators
 def memo(f):
     """
@@ -67,6 +83,7 @@ def memo(f):
     _f.cache = {}
     return _f
 
+
 def clear_cxt_vars(cxt):
     """
     Clear all necessary context-class instance variables due to context change
@@ -75,7 +92,8 @@ def clear_cxt_vars(cxt):
         del cxt._cl
     if hasattr(cxt, '_pairs'):
         del cxt._pairs
-        
+
+
 def basis_computation(f):
     def _f(*args, **kwargs):
         old_obj_intent = args[0].get_object_intent_by_index 
@@ -91,6 +109,7 @@ def basis_computation(f):
     _f.__name__ = f.__name__
     return _f
 
+
 def objects_attributes_change(f):
     """
     Decorator that clears context values when objects or attributes are modified.
@@ -99,6 +118,7 @@ def objects_attributes_change(f):
         clear_cxt_vars(args[0])
         f(*args)
     return _f
+
 
 ####Context Class
 class Context(object):
@@ -186,12 +206,12 @@ class Context(object):
         objects - the list of objects
         attributes - the list of attributes 
         """
-        if not (isinstance(cross_table, list) and
-                all(isinstance(i, list) for i in cross_table)):
-            try:
-                cross_table = [list(i) for i in cross_table]
-            except:
-                raise NotTableException(cross_table)
+        # if not (isinstance(cross_table, list) and
+        #         all(isinstance(i, list) for i in cross_table)):
+        #     try:
+        #         cross_table = [list(i) for i in cross_table]
+        #     except:
+        #         raise NotTableException(cross_table)
         if len(cross_table) != len(objects):
             raise ValueError("Number of objects (=%i) and number of cross table"
                    " rows(=%i) must agree" % (len(objects), len(cross_table)))
@@ -200,23 +220,25 @@ class Context(object):
                     " columns (=%i) must agree" % (len(attributes),
                         len(cross_table[0])))
         _attributes = attributes[:]
-        for att in _attributes:
-            if _attributes.count(att) > 1:
-                indices = [i for i, x in enumerate(_attributes) if x == att]
-                for i in indices:
-                    _attributes[i] = str(att) + '_{}'.format(i)
-                message =  "Not unique name of attribute '{}', ".format(att)
-                message += "renamed to '{}_n', n \in {}".format(att, indices)
-                print(message)
+        if len(set(attributes)) < len(attributes):
+            for att in _attributes:
+                if _attributes.count(att) > 1:
+                    indices = [i for i, x in enumerate(_attributes) if x == att]
+                    for i in indices:
+                        _attributes[i] = str(att) + '_{}'.format(i)
+                    message =  "Not unique name of attribute '{}', ".format(att)
+                    message += "renamed to '{}_n', n \in {}".format(att, indices)
+                    module_logger.info(message)
         _objects = objects[:]
-        for obj in _objects:
-            if _objects.count(obj) > 1:
-                indices = [i for i, x in enumerate(_objects) if x == obj]
-                for i in indices:
-                    _objects[i] = str(obj) + '_{}'.format(i)
-                message =  "Not unique name of object '{}', ".format(obj)
-                message += "renamed to '{}_n', n \in {}".format(obj, indices)
-                print(message)
+        if len(set(objects)) < len(objects):
+            for obj in _objects:
+                if _objects.count(obj) > 1:
+                    indices = [i for i, x in enumerate(_objects) if x == obj]
+                    for i in indices:
+                        _objects[i] = str(obj) + '_{}'.format(i)
+                    message =  "Not unique name of object '{}', ".format(obj)
+                    message += "renamed to '{}_n', n \in {}".format(obj, indices)
+                    module_logger.info(message)
             
         self._table = cross_table
         self._objects = _objects
@@ -227,7 +249,7 @@ class Context(object):
                                   for ind, att in enumerate(_attributes)}
         
     def get_table(self):
-        return self._table
+        return self.np_table
     table = property(get_table)
     
     def get_attributes(self):
@@ -252,6 +274,9 @@ class Context(object):
         return fca.algorithms.norris(self, False)
         
     concepts = property(get_concepts)
+
+    def iterate_concepts(self):
+        return fca.algorithms.iterative_norris(self)
         
     @basis_computation
     def get_attribute_canonical_basis(self,
@@ -336,13 +361,19 @@ class Context(object):
     def add_attribute(self, col, attr_name):
         """Add new attribute to context with given name"""
         # not optimised: not expected to be a usual operation
-        new_table = np.c_[self.np_table, col].tolist()
+        new_table = np.c_[self.np_table, col]
         new_attributes = self.attributes + [attr_name]
         self.__init__(new_table, self.objects, new_attributes)
 
     def add_object(self, row, obj_name):
-        """Add new object to context with given name"""
-        new_table = self.table + [row]
+        """Add new object to context with given name
+
+        @note: very slow, not suitable for incrementally creating a context"""
+        # not optimised: not expected to be a usual operation
+        if self.table.shape[0] > 0:
+            new_table = np.vstack((self.table, [row]))
+        else:
+            new_table = np.array([row])
         new_objects = self.objects + [obj_name]
         self.__init__(new_table, new_objects, self.attributes)
         

@@ -83,15 +83,15 @@ class BasicExploration(object):
         
     def _init_implications(self):
         """Compute stem base for initial context"""
-        self.attribute_implications = fca.compute_dg_basis(self.context)
+        self.attribute_implications = self.context.get_attribute_canonical_basis()
         transposed_cxt = self.context.transpose()
-        self.object_implications = fca.compute_dg_basis(transposed_cxt)
+        self.object_implications = transposed_cxt.get_attribute_canonical_basis()
         self.confirmed_attribute_implications = []
         self.confirmed_object_implications = []
         
     def recompute_basis(self):
         basis = self.confirmed_attribute_implications
-        new_implications = fca.compute_dg_basis(self.context, basis)
+        new_implications = self.context.get_attribute_canonical_basis()
         self.attribute_implications = []
         for imp in new_implications:
             if imp not in basis:
@@ -99,7 +99,7 @@ class BasicExploration(object):
                 
         basis = self.confirmed_object_implications
         transposed_cxt = self.context.transpose()
-        new_implications = fca.compute_dg_basis(transposed_cxt, basis)
+        new_implications = transposed_cxt.get_attribute_canonical_basis()
         self.object_implications = []
         for imp in new_implications:
             if imp not in basis:
@@ -190,32 +190,33 @@ class BasicExploration(object):
         return True
         
     def add_object(self, intent, name):
-        if not check_intent_for_conflicts(intent):
+        if not self.check_intent_for_conflicts(intent):
             raise BasisConflict(intent)
         else:
             self.context.add_object_with_intent(intent, name)
             self.recompute_basis()
             
     def add_attribute(self, extent, name):
-        if not check_extent_for_conflicts(extent):
+        if not self.check_extent_for_conflicts(extent):
             raise BasisConflict(extent)
         else:
             self.context.add_attribute_with_extent(extent, name)
             self.recompute_basis()
             
     def edit_attribute(self, new_extent, name):
-        if not check_extent_for_conflicts(extent):
-            raise BasisConflict(extent)
+        if not self.check_extent_for_conflicts(new_extent):
+            raise BasisConflict(new_extent)
         else:
-            self.context.set_attribute_extent(extent, name)
+            self.context.set_attribute_extent(new_extent, name)
             self.recompute_basis()
             
     def edit_object(self, new_intent, name):
-        if not check_intent_for_conflicts(intent):
-            raise BasisConflict(intent)
+        if not self.check_intent_for_conflicts(new_intent):
+            raise BasisConflict(new_intent)
         else:
-            self.context.set_object_intent(intent, name)
+            self.context.set_object_intent(new_intent, name)
             self.recompute_basis()
+
 
 if __name__ == "__main__":    
     table = [[True, False, False, True],

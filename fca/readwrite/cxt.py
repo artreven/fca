@@ -64,8 +64,23 @@ def read_cxt(path):
     number_of_attributes = int(input_file.readline().strip())
     input_file.readline() # Empty line
 
-    objects = [input_file.readline().strip() for i in range(number_of_objects)]
-    attributes = [input_file.readline().strip() for i in range(number_of_attributes)]
+    # objects = [input_file.readline().strip() for _ in range(number_of_objects)]
+    objects = []
+    for _ in range(number_of_objects):
+        next_obj_s = input_file.readline().strip()
+        try:
+            next_obj = eval(next_obj_s)
+        except (NameError, SyntaxError):
+            next_obj = next_obj_s
+        objects.append(next_obj)
+    attributes = []
+    for _ in range(number_of_attributes):
+        next_att_s = input_file.readline().strip()
+        try:
+            next_att = eval(next_att_s)
+        except NameError:
+            next_att = next_att_s
+        attributes.append(next_att)
 
     table = []
     for i in range(number_of_objects):
