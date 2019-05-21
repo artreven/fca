@@ -113,7 +113,7 @@ class BasicPatternExploration:
         self.negative_cxt = copy.deepcopy(init_negative_cxt)
         # self.negative_cpts = self.negative_cxt.concepts
         self.expert = expert
-        self.confirmed_patterns = set()
+        self.confirmed_patterns = []
         self.pattern_generator = pattern_generator
 
     def iterate_patterns_with_examples(self):
@@ -134,7 +134,7 @@ class BasicPatternExploration:
             raise NotAPositivePattern(pattern)
         elif self.negative_cxt.aclosure(pattern) != set(self.negative_cxt.attributes):
             raise NotANegativePattern(pattern)
-        self.confirmed_patterns.add(frozenset(pattern))
+        self.confirmed_patterns.append(frozenset(pattern))
         return self
 
     def iterate_examples(self, pattern):

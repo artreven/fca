@@ -402,15 +402,24 @@ class Context(object):
 
     def delete_object(self, name):
         obj_index = self.object_indices[name]
-        del self.table[obj_index]
+        self.np_table = np.delete(self.np_table, obj_index, 0)
+        new_table = self.np_table.tolist()
         del self.objects[obj_index]
-        self.__init__(self.table, self.objects, self.attributes)
+        self.__init__(new_table, self.objects, self.attributes)
 
     def delete_attribute(self, name):
         att_index = self.attribute_indices[name]
         self.np_table = np.delete(self.np_table, att_index, 1)
         new_table = self.np_table.tolist()
         del self.attributes[att_index]
+        self.__init__(new_table, self.objects, self.attributes)
+
+    def delete_attributes(self, names):
+        att_inds = [self.attribute_indices[name] for name in names]
+        self.np_table = np.delete(self.np_table, att_inds, 1)
+        new_table = self.np_table.tolist()
+        for att_index in sorted(att_inds, reverse=True):
+            del self.attributes[att_index]
         self.__init__(new_table, self.objects, self.attributes)
 
     def rename_object(self, old_name, name):
