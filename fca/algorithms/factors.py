@@ -69,7 +69,7 @@ def algorithm2(cxt, fidelity=1):
     author = "Radim Belohlavek and Vilem Vychodil"}
 
     Extensions:
-    Fidelity of coverage - stop when fidelity level is explained by factors
+    Fidelity of coverage - stop when fidelity level is covered by factors
     """
     U = set(cxt.object_attribute_pairs)
     len_initial = len(U)
@@ -100,6 +100,62 @@ def algorithm2(cxt, fidelity=1):
             assert False
         U -= to_remove
         yield fca.Concept(C, D), len(to_remove) / len_initial
+
+
+def algorithm2_weighted(cxt, fidelity=1):
+    """
+    Algorithm2 from article{
+    title = "Discovery of optimal factors in binary data via a novel method of matrix decomposition ",
+    journal = "Journal of Computer and System Sciences ",
+    volume = "76",
+    number = "1",
+    pages = "3 - 20",
+    year = "2010",
+    doi = "http://dx.doi.org/10.1016/j.jcss.2009.05.002",
+    url = "http://www.sciencedirect.com/science/article/pii/S0022000009000415",
+    author = "Radim Belohlavek and Vilem Vychodil"}
+
+    Extensions:
+    Fidelity of coverage - stop when fidelity level is covered by factors
+    """
+    len_objs_initial = len(cxt.objects)
+    len_atts_initial = len(cxt.attributes)
+
+    def score(obj_att_pairs):
+        objs = {x[0] for x in obj_att_pairs}
+        atts = {x[1] for x in obj_att_pairs}
+        score = len(objs) * len(atts) / (len_objs_initial * len_atts_initial)
+        return score
+
+    U = set(cxt.object_attribute_pairs)
+    len_initial = len(U)
+    while (len_initial - len(U)) / len_initial < fidelity:
+        D = set()
+        V = 0
+        to_remove = set()
+        while True:
+            ls_measures = [
+                (score(_oplus(D, j, cxt, U)), j)
+                           for j in set(cxt.attributes) - D
+                ]
+            if ls_measures:
+                maxDj = max(ls_measures, key=lambda x: x[0])
+            else:
+                maxDj = [0,]
+            if maxDj[0] > V:
+                j_score, j = maxDj
+                Dj = D | {j}
+                C = cxt.aprime(Dj)
+                D = cxt.oprime(C)
+                to_remove = set(itertools.product(C, D)) & U
+                V = len(to_remove)
+            else:
+                break
+        if len(to_remove) == 0:
+            print('Algorithm stuck, something went wrong, pairs left ', len(U))
+            assert False
+        U -= to_remove
+        yield fca.Concept(C, D), j_score
 
 
 if __name__ == '__main__':
