@@ -78,7 +78,7 @@ def read_cxt(path):
         next_att_s = input_file.readline().strip()
         try:
             next_att = eval(next_att_s)
-        except NameError:
+        except (NameError, SyntaxError):
             next_att = next_att_s
         attributes.append(next_att)
 

@@ -7,10 +7,13 @@ Created on Jan 8, 2014
 """
 import itertools
 import collections
+import random
+from typing import Tuple, Set
 
 import fca
 
-def make_factor_cxts(factors=[]):
+
+def make_factor_cxts(factors=None):
     """
     Make two contexts: objects-factors and factors-attributes out of tuple of
     given concepts.
@@ -25,6 +28,9 @@ def make_factor_cxts(factors=[]):
             num_els = len(el_dict)
             el_dict[el] = num_els
             return num_els
+
+    if factors is None:
+        factors = []
     objs_dict = dict()
     atts_dict = dict()
     table_objs_fcts = []
@@ -46,12 +52,15 @@ def make_factor_cxts(factors=[]):
             fca.Context(table_fcts_atts, names_fcts, attributes))
 
 
-def _oplus(D, y, cxt, U):
-    Dplusy = D | {y}
-    Dplusy_prime = cxt.aprime(Dplusy)
-    pr = set(itertools.product(Dplusy_prime,
-                               cxt.oprime(Dplusy_prime)))
-    result = pr & U
+def _oplus(D_objs: Set[str], y: str,
+           cxt: 'fca.Context',
+           U: Set[Tuple[str, str]]):
+    yprime = cxt.get_attribute_extent(y)
+    Dy_prime = D_objs & yprime
+    Dy_primeprime = cxt.oprime(Dy_prime)
+    cpt = fca.Concept(extent=Dy_prime, intent=Dy_primeprime)
+    # result = {x for x in cpt.pairs() if x not in U}
+    result = set(cpt.pairs()) & U
     return result
 
 
@@ -78,10 +87,9 @@ def algorithm2(cxt, fidelity=1):
         V = 0
         to_remove = set()
         while True:
-            ls_measures = [
-                (len(_oplus(D, j, cxt, U)), j)
-                           for j in set(cxt.attributes) - D
-                ]
+            D_objs = cxt.aprime(D)
+            ls_measures = [(len(_oplus(D_objs, j, cxt, U)), j)
+                           for j in set(cxt.attributes) - D]
             if ls_measures:
                 maxDj = max(ls_measures, key=lambda x: x[0])
             else:
@@ -134,10 +142,9 @@ def algorithm2_weighted(cxt, fidelity=1):
         V = 0
         to_remove = set()
         while True:
-            ls_measures = [
-                (score(_oplus(D, j, cxt, U)), j)
-                           for j in set(cxt.attributes) - D
-                ]
+            D_objs = cxt.oprime(D)
+            ls_measures = [(score(_oplus(D_objs, j, cxt, U)), j)
+                           for j in set(cxt.attributes) - D]
             if ls_measures:
                 maxDj = max(ls_measures, key=lambda x: x[0])
             else:
@@ -158,11 +165,96 @@ def algorithm2_weighted(cxt, fidelity=1):
         yield fca.Concept(C, D), j_score
 
 
+def algorithm2_w_condition(cxt, fidelity: float = 1,
+                           allow_repeatitions=True,
+                           min_atts_and_objs=3, objs_ge_atts=False):
+    """
+    Algorithm2 from article{
+    title = "Discovery of optimal factors in binary data via a novel method of matrix decomposition ",
+    journal = "Journal of Computer and System Sciences ",
+    volume = "76",
+    number = "1",
+    pages = "3 - 20",
+    year = "2010",
+    doi = "http://dx.doi.org/10.1016/j.jcss.2009.05.002",
+    url = "http://www.sciencedirect.com/science/article/pii/S0022000009000415",
+    author = "Radim Belohlavek and Vilem Vychodil"}
+
+    :param objs_ge_atts: should the number of objects be greater or equal to
+            the number of attributes in the output factors
+    :param min_atts_and_objs: minimum number of attributes and objects in the
+            output factors
+    :param fidelity: stops when this fraction of crosses in the table are covered
+    :param allow_repeatitions: exclude attributes in already obtained factors
+            from further consideration - they still may appear in the closure
+    """
+    def good_factor(cpt: 'fca.Concept'):
+        if objs_ge_atts:
+            return len(cpt.extent) >= len(cpt.intent) >= min_atts_and_objs
+        else:
+            return len(cpt.extent) >= min_atts_and_objs and \
+                   len(cpt.intent) >= min_atts_and_objs
+
+    U = set(cxt.object_attribute_pairs)
+    len_initial = len(U)
+    removed_atts = set()
+    if not len_initial:
+        raise StopIteration
+    while (len_initial - len(U)) / len_initial < fidelity:
+        D = set()
+        C = set()
+        V = 0
+        to_remove = set()
+        available_atts = {x[1] for x in U} - removed_atts
+        while True:
+            Dprime = cxt.aprime(D)
+            ls_measures = [(len(_oplus(Dprime, j, cxt, U)), j)
+                           for j in available_atts - D]
+            if not ls_measures:
+                # print(f'Empty ls_measures. len(u) = {len(U)}')
+                raise StopIteration
+            # print('V=', V, ' ls_measures: ', ls_measures, '\nto_remove', to_remove)
+            maxDj = max(ls_measures, key=lambda x: x[0])
+            if (maxDj[0] < V and good_factor(cpt=fca.Concept(C, D))):  # yield factor
+                if len(to_remove) == 0:
+                    raise Exception(
+                        f'Algorithm stuck, something went wrong, pairs left '
+                        f'{len(U)}')
+                if allow_repeatitions:
+                    U -= to_remove
+                else:
+                    removed_atts |= {x[1] for x in to_remove}
+                    # removed_objs |= {x[0] for x in to_remove}
+                    U = {(o, a) for o, a in U
+                         # if o not in removed_objs
+                         if a not in removed_atts}
+                # print(f'Good factor found: {len(C)}, {D}. len(U) = {len(U)}')
+                yield fca.Concept(C, D), (len_initial - len(U)) / len_initial
+                break
+            else:  # update the values
+                j_score, j = maxDj
+                D_old = D.copy() | {j}
+                Dj = D | {j}
+                C = cxt.aprime(Dj)
+                D = cxt.oprime(C)
+                if len(D) == len(cxt.attributes) or (objs_ge_atts and len(C) < len(D)):
+                    # removed_objs |= {x[0] for x in to_remove}
+                    U = {(o, a) for o, a in U
+                         # if o not in removed_objs
+                         if a not in D_old}
+                    # print(len(D) == len(cxt.attributes), objs_ge_atts, C, len(D), D_old)
+                    # print(f'Dead end with {removed_atts}. len(u) = {len(U)}, {U}')
+                    break
+                to_remove = set(itertools.product(C, D)) & U
+                V = len(to_remove)
+
+
 if __name__ == '__main__':
     import cProfile
     import numpy.linalg as lalg
-    r_cxt = fca.make_random_context(1200, 1000, .3)
+    from fca import make_random_context
+
+    r_cxt = make_random_context(1200, 1000, .3)
     # r_cxt = r_cxt.reduce_attributes().reduce_objects()
     cProfile.run('print(lalg.svd(r_cxt.np_table))')
     cProfile.run('for x in algorithm2(r_cxt, .3): print(len(x[0].extent), len(x[0].intent), x[1])')
-

@@ -198,7 +198,7 @@ class Context(object):
     1, 3, 4 => 2
     """
 
-    def __init__(self, cross_table=[], objects=[], attributes=[]):
+    def __init__(self, cross_table=None, objects=None, attributes=None):
         """Create a context from cross table and list of objects, list
         of attributes
         
@@ -239,11 +239,11 @@ class Context(object):
                     message =  "Not unique name of object '{}', ".format(obj)
                     message += "renamed to '{}_n', n \in {}".format(obj, indices)
                     module_logger.info(message)
-            
-        self._table = cross_table
+
         self._objects = _objects
         self._attributes = _attributes
         self.np_table = np.array(cross_table, dtype=bool)
+        self.cross_table = self.np_table.tolist()
         self.object_indices = {obj: ind for ind, obj in enumerate(_objects)}
         self.attribute_indices = {att: ind
                                   for ind, att in enumerate(_attributes)}
@@ -674,9 +674,6 @@ class Context(object):
         return output
     
     def __eq__(self, other):
-        """
-        @author: Artem Revenko
-        """
         if type(other) != Context:
             raise TypeError("An input object should be a context!")
         if self.__repr__() == other.__repr__():
@@ -693,7 +690,7 @@ class Context(object):
             table = [[other.table[obj_inds[i]][att_inds[j]]
                       for j in range(len(self.attributes))]
                      for i in range(len(self.objects))]
-            if table == self.table:
+            if table == self.cross_table:
                 return True
             else:
                 return False

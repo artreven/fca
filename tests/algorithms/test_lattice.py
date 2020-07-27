@@ -9,6 +9,6 @@ class TestNorris:
 
     def test_norris(self):
         cl = fca.ConceptLattice(self.small_cxt)
-        assert fca.Concept([], self.small_cxt.attributes) in cl
         assert fca.Concept(self.small_cxt.objects, []) in cl
+        assert fca.Concept([], self.small_cxt.attributes) in cl
         assert len(cl) > 2

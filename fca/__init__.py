@@ -3,8 +3,8 @@
 
 from fca.concept import Concept
 from fca.concept_system import ConceptSystem
-from fca.concept_lattice import ConceptLattice
 from fca.context import Context, make_random_context
+from fca.concept_lattice import ConceptLattice
 from fca.mvcontext import ManyValuedContext
 from fca.scale import Scale
 from fca.implication import Implication, UnitImplication, NegativeImplication

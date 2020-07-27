@@ -62,7 +62,7 @@ class ManyValuedContext(Context):
         #             " columns (=%i) must agree" % (len(attributes),
         #                 len(table[0])))
         #
-        # self._table = table
+        # self.cross_table = table
         # self._objects = objects
         # self._attributes = attributes
 
@@ -77,7 +77,7 @@ class ManyValuedContext(Context):
     attributes = property(get_attributes)
     
     def get_table(self):
-        return self._table
+        return self.cross_table
         
     table = property(get_table)
 

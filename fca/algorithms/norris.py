@@ -58,7 +58,11 @@ def iterative_norris(context):
     for ex in context.examples():
         examples.append(ex)
 
-    cs = [Concept([], context.attributes)]
+    top_cpt = Concept([], context.attributes)
+    #
+    yield top_cpt
+    #
+    cs = [top_cpt]
     for i in range(len(context)):
         cs_for_loop = cs[:]
         for c in cs_for_loop:

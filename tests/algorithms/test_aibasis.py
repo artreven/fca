@@ -20,7 +20,7 @@ class Test:
         aibasis = self.cxt_random.get_attribute_canonical_basis(
                       get_basis=fca.algorithms.aibasis.compute_canonical_basis)
         ncbasis = self.cxt_random.get_attribute_implications()
-        assert (len(aibasis) == len(ncbasis))
+        assert (len(aibasis) == len(ncbasis)), (len(aibasis), len(ncbasis))
         
     def test_same_closure(self):
         aibasis = self.cxt_random.get_attribute_canonical_basis(

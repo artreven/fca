@@ -84,7 +84,7 @@ class Test:
                    [0,0,1,0,0,1],
                    [0,1,1,1,0,1]]
         cxt_mult = cxt_l * cxt_r
-        assert cxt_mult.table == table_o
+        assert cxt_mult.cross_table == table_o
         assert cxt_mult.objects == ['g1', 'g2', 'g3', 'g4', 'g5']
         assert cxt_mult.attributes == ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']
         

@@ -2,6 +2,8 @@
 """
 Contains base class for formal concept
 """
+import itertools
+
 
 class Concept(object):
     """ 
@@ -67,6 +69,13 @@ class Concept(object):
 
     def __hash__(self):
         return hash(str(self))
+
+    def pairs(self):
+        if not self.extent or not self.intent:
+            return []
+        else:
+            out = itertools.product(self.extent, self.intent)
+            return out
 
 if __name__ == "__main__":
     import doctest
