@@ -212,7 +212,7 @@ def algorithm2_w_condition(cxt, fidelity: float = 1,
             ls_measures = [(len(_oplus(Dprime, j, cxt, U)), j)
                            for j in available_atts - D]
             if not ls_measures:
-                print(f'Empty ls_measures. len(U) = {len(U)}, {set(u[1] for u in U)}, len(D) = {len(D)}, len(avail_atts) = {len(available_atts)}')
+                # print(f'Empty ls_measures. len(U) = {len(U)}, {set(u[1] for u in U)}, len(D) = {len(D)}, len(avail_atts) = {len(available_atts)}')
                 return
             maxDj = max(ls_measures, key=lambda x: x[0])
             # print(D, Dprime, maxDj, V)
