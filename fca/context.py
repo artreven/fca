@@ -553,12 +553,8 @@ class Context(object):
                        attribute_names)
         
     def get_object_attribute_pairs(self):
-        num_objs = len(self.objects)
-        num_atts = len(self.attributes)
         pairs = [(self.objects[i], self.attributes[j])
-                 for i in range(num_objs)
-                 for j in range(num_atts)
-                 if self.table[i][j] == 1]
+                 for i, j in zip(*self.np_table.nonzero())]
         return pairs
     
     object_attribute_pairs = property(get_object_attribute_pairs)

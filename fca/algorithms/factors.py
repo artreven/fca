@@ -198,11 +198,12 @@ def algorithm2_w_condition(cxt, fidelity: float = 1,
     U = set(cxt.object_attribute_pairs)
     len_initial = len(U)
     removed_atts = set()
+    removed_objs = set()
     if not len_initial:
-        raise StopIteration
+        return
     while (len_initial - len(U)) / len_initial < fidelity:
         D = set()
-        C = set()
+        C = set(cxt.objects)
         V = 0
         to_remove = set()
         available_atts = {x[1] for x in U} - removed_atts
@@ -211,42 +212,39 @@ def algorithm2_w_condition(cxt, fidelity: float = 1,
             ls_measures = [(len(_oplus(Dprime, j, cxt, U)), j)
                            for j in available_atts - D]
             if not ls_measures:
-                # print(f'Empty ls_measures. len(u) = {len(U)}')
-                raise StopIteration
-            # print('V=', V, ' ls_measures: ', ls_measures, '\nto_remove', to_remove)
+                print(f'Empty ls_measures. len(U) = {len(U)}, {set(u[1] for u in U)}, len(D) = {len(D)}, len(avail_atts) = {len(available_atts)}')
+                return
             maxDj = max(ls_measures, key=lambda x: x[0])
-            if (maxDj[0] < V and good_factor(cpt=fca.Concept(C, D))):  # yield factor
+            # print(D, Dprime, maxDj, V)
+            # print(cxt)
+            if maxDj[0] > V or not good_factor(cpt=fca.Concept(C, D)):  # update the values
+                # D_old = D.copy()
+                j_score, j = maxDj
+                Dj = D | {j}
+                C = cxt.aprime(Dj)
+                if len(C) < min_atts_and_objs or not (available_atts - D):  # early restart
+                    U = {u for u in U if u[1] not in Dj}
+                    removed_atts |= Dj
+                    break
+                D = cxt.oprime(C)
+                to_remove_U = set(itertools.product(C, D)) & U
+                V = len(to_remove_U)
+                if not allow_repeatitions:
+                    to_remove = (set(itertools.product(C, cxt.attributes)) |
+                                 set(itertools.product(cxt.objects, D))) & U
+                else:
+                    to_remove = to_remove_U
+            elif good_factor(cpt=fca.Concept(C, D)):
                 if len(to_remove) == 0:
                     raise Exception(
                         f'Algorithm stuck, something went wrong, pairs left '
                         f'{len(U)}')
-                if allow_repeatitions:
-                    U -= to_remove
-                else:
-                    removed_atts |= {x[1] for x in to_remove}
-                    # removed_objs |= {x[0] for x in to_remove}
-                    U = {(o, a) for o, a in U
-                         # if o not in removed_objs
-                         if a not in removed_atts}
-                # print(f'Good factor found: {len(C)}, {D}. len(U) = {len(U)}')
-                yield fca.Concept(C, D), (len_initial - len(U)) / len_initial
+                U -= to_remove
+                # print(f'Factor out: {len(C)}, {len(D)}')
+                yield fca.Concept(C, D), len(to_remove) / len_initial, (len_initial - len(U)) / len_initial
                 break
-            else:  # update the values
-                j_score, j = maxDj
-                D_old = D.copy() | {j}
-                Dj = D | {j}
-                C = cxt.aprime(Dj)
-                D = cxt.oprime(C)
-                if len(D) == len(cxt.attributes) or (objs_ge_atts and len(C) < len(D)):
-                    # removed_objs |= {x[0] for x in to_remove}
-                    U = {(o, a) for o, a in U
-                         # if o not in removed_objs
-                         if a not in D_old}
-                    # print(len(D) == len(cxt.attributes), objs_ge_atts, C, len(D), D_old)
-                    # print(f'Dead end with {removed_atts}. len(u) = {len(U)}, {U}')
-                    break
-                to_remove = set(itertools.product(C, D)) & U
-                V = len(to_remove)
+            else:
+                assert False
 
 
 if __name__ == '__main__':
